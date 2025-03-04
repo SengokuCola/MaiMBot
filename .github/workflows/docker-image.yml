@@ -34,3 +34,5 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/maimbot:${{ github.ref_name }}
             ${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest
           push: true 
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest
+          cache-to: type=inline
