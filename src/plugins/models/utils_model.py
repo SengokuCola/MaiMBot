@@ -4,17 +4,20 @@ import requests
 import time
 from typing import Tuple, Union
 from nonebot import get_driver
+from loguru import logger
 from ..chat.config import global_config
+
 driver = get_driver()
 config = driver.config
 
 class LLM_request:
-    def __init__(self, model ,**kwargs):
+    def __init__(self, model, **kwargs):
         # 将大写的配置键转换为小写并从config中获取实际值
         try:
             self.api_key = getattr(config, model["key"])
             self.base_url = getattr(config, model["base_url"])
         except AttributeError as e:
+            logger.error(f"配置错误：找不到对应的配置项 - {str(e)}")
             raise ValueError(f"配置错误：找不到对应的配置项 - {str(e)}")
         self.model_name = model["name"]
         self.params = kwargs
@@ -35,6 +38,7 @@ class LLM_request:
         
         # 发送请求到完整的chat/completions端点
         api_url = f"{self.base_url.rstrip('/')}/chat/completions"
+        logger.info(f"发送请求到URL: {api_url}")  # 记录请求的URL
         
         max_retries = 3
         base_wait_time = 15
@@ -45,7 +49,7 @@ class LLM_request:
                     async with session.post(api_url, headers=headers, json=data) as response:
                         if response.status == 429:
                             wait_time = base_wait_time * (2 ** retry)  # 指数退避
-                            print(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
+                            logger.warning(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
                             await asyncio.sleep(wait_time)
                             continue
                             
@@ -61,11 +65,13 @@ class LLM_request:
             except Exception as e:
                 if retry < max_retries - 1:  # 如果还有重试机会
                     wait_time = base_wait_time * (2 ** retry)
-                    print(f"[回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}")
+                    logger.error(f"[回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}", exc_info=True)
                     await asyncio.sleep(wait_time)
                 else:
+                    logger.critical(f"请求失败: {str(e)}", exc_info=True)
                     return f"请求失败: {str(e)}", ""
         
+        logger.error("达到最大重试次数，请求仍然失败")
         return "达到最大重试次数，请求仍然失败", ""
 
     async def generate_response_for_image(self, prompt: str, image_base64: str) -> Tuple[str, str]:
@@ -100,6 +106,7 @@ class LLM_request:
         
         # 发送请求到完整的chat/completions端点
         api_url = f"{self.base_url.rstrip('/')}/chat/completions"
+        logger.info(f"发送请求到URL: {api_url}")  # 记录请求的URL
         
         max_retries = 3
         base_wait_time = 15
@@ -110,7 +117,7 @@ class LLM_request:
                     async with session.post(api_url, headers=headers, json=data) as response:
                         if response.status == 429:
                             wait_time = base_wait_time * (2 ** retry)  # 指数退避
-                            print(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
+                            logger.warning(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
                             await asyncio.sleep(wait_time)
                             continue
                             
@@ -126,11 +133,13 @@ class LLM_request:
             except Exception as e:
                 if retry < max_retries - 1:  # 如果还有重试机会
                     wait_time = base_wait_time * (2 ** retry)
-                    print(f"[image回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}")
+                    logger.error(f"[image回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}", exc_info=True)
                     await asyncio.sleep(wait_time)
                 else:
+                    logger.critical(f"请求失败: {str(e)}", exc_info=True)
                     return f"请求失败: {str(e)}", ""
         
+        logger.error("达到最大重试次数，请求仍然失败")
         return "达到最大重试次数，请求仍然失败", ""
 
     def generate_response_for_image_sync(self, prompt: str, image_base64: str) -> Tuple[str, str]:
@@ -165,6 +174,7 @@ class LLM_request:
         
         # 发送请求到完整的chat/completions端点
         api_url = f"{self.base_url.rstrip('/')}/chat/completions"
+        logger.info(f"发送请求到URL: {api_url}")  # 记录请求的URL
         
         max_retries = 2
         base_wait_time = 6
@@ -174,8 +184,8 @@ class LLM_request:
                 response = requests.post(api_url, headers=headers, json=data, timeout=30)
                 
                 if response.status_code == 429:
-                    wait_time = base_wait_time * (2 ** retry)  # 指数退避
-                    print(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
+                    wait_time = base_wait_time * (2 ** retry)
+                    logger.warning(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
                     time.sleep(wait_time)
                     continue
                     
@@ -191,11 +201,13 @@ class LLM_request:
             except Exception as e:
                 if retry < max_retries - 1:  # 如果还有重试机会
                     wait_time = base_wait_time * (2 ** retry)
-                    print(f"[image_sync回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}")
+                    logger.error(f"[image_sync回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}", exc_info=True)
                     time.sleep(wait_time)
                 else:
+                    logger.critical(f"请求失败: {str(e)}", exc_info=True)
                     return f"请求失败: {str(e)}", ""
         
+        logger.error("达到最大重试次数，请求仍然失败")
         return "达到最大重试次数，请求仍然失败", ""
 
     def get_embedding_sync(self, text: str, model: str = "BAAI/bge-m3") -> Union[list, None]:
@@ -220,6 +232,7 @@ class LLM_request:
         }
         
         api_url = f"{self.base_url.rstrip('/')}/embeddings"
+        logger.info(f"发送请求到URL: {api_url}")  # 记录请求的URL
         
         max_retries = 2
         base_wait_time = 6
@@ -230,7 +243,7 @@ class LLM_request:
                 
                 if response.status_code == 429:
                     wait_time = base_wait_time * (2 ** retry)
-                    print(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
+                    logger.warning(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
                     time.sleep(wait_time)
                     continue
                     
@@ -244,13 +257,13 @@ class LLM_request:
             except Exception as e:
                 if retry < max_retries - 1:
                     wait_time = base_wait_time * (2 ** retry)
-                    print(f"[embedding_sync]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}")
+                    logger.error(f"[embedding_sync]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}", exc_info=True)
                     time.sleep(wait_time)
                 else:
-                    print(f"embedding请求失败: {str(e)}")
+                    logger.critical(f"embedding请求失败: {str(e)}", exc_info=True)
                     return None
         
-        print("达到最大重试次数，embedding请求仍然失败")
+        logger.error("达到最大重试次数，embedding请求仍然失败")
         return None
 
     async def get_embedding(self, text: str, model: str = "BAAI/bge-m3") -> Union[list, None]:
@@ -275,6 +288,7 @@ class LLM_request:
         }
         
         api_url = f"{self.base_url.rstrip('/')}/embeddings"
+        logger.info(f"发送请求到URL: {api_url}")  # 记录请求的URL
         
         max_retries = 3
         base_wait_time = 15
@@ -285,7 +299,7 @@ class LLM_request:
                     async with session.post(api_url, headers=headers, json=data) as response:
                         if response.status == 429:
                             wait_time = base_wait_time * (2 ** retry)
-                            print(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
+                            logger.warning(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
                             await asyncio.sleep(wait_time)
                             continue
                             
@@ -299,11 +313,11 @@ class LLM_request:
             except Exception as e:
                 if retry < max_retries - 1:
                     wait_time = base_wait_time * (2 ** retry)
-                    print(f"[embedding]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}")
+                    logger.error(f"[embedding]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}", exc_info=True)
                     await asyncio.sleep(wait_time)
                 else:
-                    print(f"embedding请求失败: {str(e)}")
+                    logger.critical(f"embedding请求失败: {str(e)}", exc_info=True)
                     return None
         
-        print("达到最大重试次数，embedding请求仍然失败")
+        logger.error("达到最大重试次数，embedding请求仍然失败")
         return None
