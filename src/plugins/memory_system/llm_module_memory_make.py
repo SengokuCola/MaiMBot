@@ -5,13 +5,13 @@ import time
 from nonebot import get_driver
 import aiohttp
 import asyncio
+from loguru import logger
 from src.plugins.chat.config import BotConfig, global_config
 
 driver = get_driver()
 config = driver.config
 
 class LLMModel:
-    # def __init__(self, model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-32B", **kwargs):
     def __init__(self, model_name=global_config.SILICONFLOW_MODEL_V3, **kwargs):
         self.model_name = model_name
         self.params = kwargs
@@ -21,7 +21,7 @@ class LLMModel:
         if not self.api_key or not self.base_url:
             raise ValueError("环境变量未正确加载：SILICONFLOW_KEY 或 SILICONFLOW_BASE_URL 未设置")
             
-        print(f"API URL: {self.base_url}")  # 打印 base_url 用于调试
+        logger.info(f"API URL: {self.base_url}")  # 使用 logger 记录 base_url
 
     async def generate_response(self, prompt: str) -> Tuple[str, str]:
         """根据输入的提示生成模型的响应"""
@@ -38,8 +38,9 @@ class LLMModel:
             **self.params
         }
         
-        # 发送请求到完整的chat/completions端点
+        # 发送请求到完整的 chat/completions 端点
         api_url = f"{self.base_url.rstrip('/')}/chat/completions"
+        logger.info(f"Request URL: {api_url}")  # 记录请求的 URL
         
         max_retries = 3
         base_wait_time = 15  # 基础等待时间（秒）
@@ -50,7 +51,7 @@ class LLMModel:
                     async with session.post(api_url, headers=headers, json=data) as response:
                         if response.status == 429:
                             wait_time = base_wait_time * (2 ** retry)  # 指数退避
-                            print(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
+                            logger.warning(f"遇到请求限制(429)，等待{wait_time}秒后重试...")
                             await asyncio.sleep(wait_time)
                             continue
                             
@@ -66,9 +67,11 @@ class LLMModel:
             except Exception as e:
                 if retry < max_retries - 1:  # 如果还有重试机会
                     wait_time = base_wait_time * (2 ** retry)
-                    print(f"[回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}")
+                    logger.error(f"[回复]请求失败，等待{wait_time}秒后重试... 错误: {str(e)}")
                     await asyncio.sleep(wait_time)
                 else:
+                    logger.error(f"请求失败: {str(e)}")
                     return f"请求失败: {str(e)}", ""
         
+        logger.error("达到最大重试次数，请求仍然失败")
         return "达到最大重试次数，请求仍然失败", ""
