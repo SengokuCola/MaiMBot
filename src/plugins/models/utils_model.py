@@ -60,8 +60,15 @@ class LLM_request:
 
                         result = await response.json()
                         if "choices" in result and len(result["choices"]) > 0:
-                            content = result["choices"][0]["message"]["content"]
-                            reasoning_content = result["choices"][0]["message"].get("reasoning_content", "")
+                            message = result["choices"][0]["message"]
+                            content = message.get("content", "")
+                            think_match = None
+                            reasoning_content = message.get("reasoning_content", "")
+                            if not reasoning_content:
+                                think_match = re.search(r'<think>(.*?)</think>', content, re.DOTALL)
+                            if think_match:
+                                reasoning_content = think_match.group(1).strip()
+                            content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
                             return content, reasoning_content
                         return "没有返回结果", ""
 
