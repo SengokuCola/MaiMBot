@@ -29,11 +29,11 @@ jobs:
         id: tags
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "::set-output name=tags::${{ secrets.DOCKERHUB_USERNAME }}/maimbot:${{ github.ref_name }},${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest"
+            echo "tags=${{ secrets.DOCKERHUB_USERNAME }}/maimbot:${{ github.ref_name }},${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "::set-output name=tags::${{ secrets.DOCKERHUB_USERNAME }}/maimbot:main,${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest"
+            echo "tags=${{ secrets.DOCKERHUB_USERNAME }}/maimbot:main,${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" == "refs/heads/debug" ]; then
-            echo "::set-output name=tags::${{ secrets.DOCKERHUB_USERNAME }}/maimbot:debug"
+            echo "tags=${{ secrets.DOCKERHUB_USERNAME }}/maimbot:debug" >> $GITHUB_OUTPUT
           fi
 
       - name: Build and Push Docker Image
