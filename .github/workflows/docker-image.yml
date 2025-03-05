@@ -3,10 +3,11 @@ name: Docker Build and Push
 on:
   push:
     branches:
-      - main       # 推送到main分支时触发
+      - main
+      - debug       # 新增 debug 分支触发
     tags:
-      - 'v*'       # 推送v开头的tag时触发（例如v1.0.0）
-  workflow_dispatch:  # 允许手动触发
+      - 'v*'       
+  workflow_dispatch: 
 
 jobs:
   build-and-push:
@@ -24,15 +25,25 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Determine Image Tags
+        id: tags
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "::set-output name=tags::${DOCKERHUB_USERNAME}/maimbot:${{ github.ref_name }},${DOCKERHUB_USERNAME}/maimbot:latest"
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "::set-output name=tags::${DOCKERHUB_USERNAME}/maimbot:main,${DOCKERHUB_USERNAME}/maimbot:latest"
+          elif [ "${{ github.ref }}" == "refs/heads/debug" ]; then
+            echo "::set-output name=tags::${DOCKERHUB_USERNAME}/maimbot:debug"
+          fi
+          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: .    # Docker构建上下文路径
-          file: ./Dockerfile  # Dockerfile路径
-          platforms: linux/amd64,linux/arm64  # 支持arm架构
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/maimbot:${{ github.ref_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest
-          push: true 
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest
-          cache-to: type=inline
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.tags.outputs.tags }}
+          push: true
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/maimbot:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/maimbot:buildcache,mode=max
