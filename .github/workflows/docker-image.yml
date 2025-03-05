@@ -29,13 +29,12 @@ jobs:
         id: tags
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "::set-output name=tags::${DOCKERHUB_USERNAME}/maimbot:${{ github.ref_name }},${DOCKERHUB_USERNAME}/maimbot:latest"
+            echo "::set-output name=tags::${{ secrets.DOCKERHUB_USERNAME }}/maimbot:${{ github.ref_name }},${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest"
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "::set-output name=tags::${DOCKERHUB_USERNAME}/maimbot:main,${DOCKERHUB_USERNAME}/maimbot:latest"
+            echo "::set-output name=tags::${{ secrets.DOCKERHUB_USERNAME }}/maimbot:main,${{ secrets.DOCKERHUB_USERNAME }}/maimbot:latest"
           elif [ "${{ github.ref }}" == "refs/heads/debug" ]; then
-            echo "::set-output name=tags::${DOCKERHUB_USERNAME}/maimbot:debug"
+            echo "::set-output name=tags::${{ secrets.DOCKERHUB_USERNAME }}/maimbot:debug"
           fi
-          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
