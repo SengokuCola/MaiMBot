@@ -1,8 +1,8 @@
 [bot]
-qq = 123
-nickname = "麦麦"
+qq = 123  # 机器人QQ号，必填
+nickname = "麦麦"  # 机器人昵称
 
-[personality]
+[personality]  #机器人性格提示词
 prompt_personality = [
         "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",    # 贴吧人格 
         "是一个女大学生，你有黑色头发，你会刷小红书",    # 小红书人格
@@ -22,9 +22,7 @@ thinking_timeout = 120 # 麦麦思考时间
 response_willing_amplifier = 1 # 麦麦回复意愿放大系数，一般为1
 response_interested_rate_amplifier = 1 # 麦麦回复兴趣度放大系数,听到记忆里的内容时放大系数
 down_frequency_rate = 3.5 # 降低回复频率的群组回复意愿降低系数
-ban_words = [
-    # "403","张三"
-    ]
+ban_words = []  # 禁用词列表
 
 [emoji]
 check_interval = 120 # 检查表情包的时间间隔
@@ -58,8 +56,8 @@ enable_kuuki_read = true # 是否启用读空气功能
 [groups]
 talk_allowed = [
     123,
-    123,
-]  #可以回复消息的群
+    123
+]  #可以回复消息的群，必填
 talk_frequency_down = []  #降低回复频率的群
 ban_user_id = []  #禁止回复消息的QQ号
 

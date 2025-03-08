@@ -56,6 +56,11 @@ Start-Process -Wait -FilePath $pythonInstaller -ArgumentList "/quiet", "InstallA
 python -m venv maimbot
 
 maimbot\\Scripts\\activate 
+# 如果你的powershell提示不能运行外部脚本
+# 有两个选择：
+# 1：（一劳永逸）管理员权限执行set-executionpolicy remotesigned
+# 然后键入Y
+# 2：手动执行 maimbot\\Scripts\\activate.ps1 或者 maimbot\\Scripts\\activate.bat
 
 # 安装依赖
 pip install -r requirements.txt
@@ -83,7 +88,7 @@ pip install -r requirements.txt
 
 ### 4️⃣ **配置文件设置，让麦麦Bot正常工作**
 - 修改环境配置文件：`.env.prod`
-- 修改机器人配置文件：`bot_config.toml`
+- 修改机器人配置文件：`config/bot_config.toml`
 
 ### 5️⃣ **启动麦麦机器人**
 - 打开命令行，cd到对应路径
