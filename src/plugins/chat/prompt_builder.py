@@ -114,13 +114,22 @@ class PromptBuilder:
         activate_prompt = ''
         activate_prompt = f"以上是群里正在进行的聊天，{memory_prompt} 现在昵称为 '{sender_name}' 的用户说的:{message_txt}。引起了你的注意,你和他{relation_prompt},{mood_prompt},你想要{relation_prompt_2}。"          
         
-        #检测机器人相关词汇
-        bot_keywords = ['人机', 'bot', '机器', '入机', 'robot', '机器人']
-        is_bot = any(keyword in message_txt.lower() for keyword in bot_keywords)
-        if is_bot:
-            is_bot_prompt = '有人说你是人机或者机器人，否定这一事实，攻击或反问他。注意，只有认为你是机器人才回复，否则不要否认'
-        else:
-            is_bot_prompt = ''
+        #检测机器人相关词汇，改为关键词检测与反应功能了，提取到全局配置中
+        # bot_keywords = ['人机', 'bot', '机器', '入机', 'robot', '机器人']
+        # is_bot = any(keyword in message_txt.lower() for keyword in bot_keywords)
+        # if is_bot:
+        #     is_bot_prompt = '有人说你是人机或者机器人，否定这一事实，攻击或反问他。注意，只有认为你是机器人才回复，否则不要否认'
+        # else:
+        #     is_bot_prompt = ''
+
+        # 关键词检测与反应
+        keywords_reaction_prompt = ''
+        for rule in global_config.keywords_reaction_rules:
+            if rule.get("enable", False):
+                if any(keyword in message_txt.lower() for keyword in rule.get("keywords", [])):
+                    print(f"检测到以下关键词之一：{rule.get('keywords', [])}，触发反应：{rule.get('reaction', '')}")
+                    keywords_reaction_prompt += rule.get("reaction", "") + '，'
+
         
         #人格选择
         personality=global_config.PROMPT_PERSONALITY
@@ -131,15 +140,15 @@ class PromptBuilder:
         personality_choice = random.random()
         if personality_choice < probability_1:  # 第一种人格
             prompt_personality = f'''{activate_prompt}你的网名叫{global_config.BOT_NICKNAME}，{personality[0]}, 你正在浏览qq群,{promt_info_prompt},
-            现在请你给出日常且口语化的回复，平淡一些，尽量简短一些。{is_bot_prompt}
+            现在请你给出日常且口语化的回复，平淡一些，尽量简短一些。{keywords_reaction_prompt}
             请注意把握群里的聊天内容，不要刻意突出自身学科背景，不要回复的太有条理，可以有个性。'''
         elif personality_choice < probability_1 + probability_2:  # 第二种人格
             prompt_personality = f'''{activate_prompt}你的网名叫{global_config.BOT_NICKNAME}，{personality[1]}, 你正在浏览qq群，{promt_info_prompt},
-            现在请你给出日常且口语化的回复，请表现你自己的见解，不要一昧迎合，尽量简短一些。{is_bot_prompt}
+            现在请你给出日常且口语化的回复，请表现你自己的见解，不要一昧迎合，尽量简短一些。{keywords_reaction_prompt}
             请你表达自己的见解和观点。可以有个性。'''
         else:  # 第三种人格
             prompt_personality = f'''{activate_prompt}你的网名叫{global_config.BOT_NICKNAME}，{personality[2]}, 你正在浏览qq群，{promt_info_prompt},
-            现在请你给出日常且口语化的回复，请表现你自己的见解，不要一昧迎合，尽量简短一些。{is_bot_prompt}
+            现在请你给出日常且口语化的回复，请表现你自己的见解，不要一昧迎合，尽量简短一些。{keywords_reaction_prompt}
             请你表达自己的见解和观点。可以有个性。'''
         
         #中文高手(新加的好玩功能)

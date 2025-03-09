@@ -88,11 +88,11 @@ CHAT_ANY_WHERE_KEY=your_key
 CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1
 
 # 如果你不知道这是什么，那么下面这些不用改，保持原样就好啦
-HOST=127.0.0.1
+HOST=127.0.0.1  # 如果使用Docker部署，需要改成0.0.0.0喵，不然听不见群友讲话了喵
 PORT=8080
 
 # 这些是数据库设置，一般也不用改呢
-MONGODB_HOST=127.0.0.1
+MONGODB_HOST=127.0.0.1  # 如果使用Docker部署，需要改成数据库容器的名字喵，默认是mongodb喵
 MONGODB_PORT=27017
 DATABASE_NAME=MegBot
 MONGODB_USERNAME = ""  # 如果数据库需要用户名，就在这里填写喵

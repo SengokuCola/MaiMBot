@@ -52,11 +52,11 @@ CHAT_ANY_WHERE_KEY=your_key
 CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1
 
 # 服务配置
-HOST=127.0.0.1
+HOST=127.0.0.1  # 如果使用Docker部署，需要改成0.0.0.0，否则QQ消息无法传入
 PORT=8080
 
 # 数据库配置
-MONGODB_HOST=127.0.0.1
+MONGODB_HOST=127.0.0.1  # 如果使用Docker部署，需要改成数据库容器的名字，默认是mongodb
 MONGODB_PORT=27017
 DATABASE_NAME=MegBot
 MONGODB_USERNAME = ""  # 数据库用户名

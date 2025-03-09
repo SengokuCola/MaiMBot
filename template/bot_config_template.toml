@@ -1,3 +1,6 @@
+[inner]
+version = "0.0.3"
+
 [bot]
 qq = 123
 nickname = "麦麦"
@@ -51,6 +54,26 @@ mood_update_interval = 1.0 # 情绪更新间隔 单位秒
 mood_decay_rate = 0.95 # 情绪衰减率
 mood_intensity_factor = 1.0 # 情绪强度因子
 
+[keywords_reaction] # 针对某个关键词作出反应
+enable = true  # 关键词反应功能的总开关
+
+[[keywords_reaction.rules]] # 如果想要新增多个关键词，直接复制本条，修改keywords和reaction即可
+enable = true # 是否启用此条（为了人类在未来AI战争能更好地识别AI（bushi），默认开启）
+keywords = ["人机", "bot", "机器", "入机", "robot", "机器人"] # 会触发反应的关键词
+reaction = "有人说你是人机或者机器人，否定这一事实，攻击或反问他。注意，只有认为你是机器人才回复，否则不要否认" # 触发之后添加的提示词
+
+[[keywords_reaction.rules]] # 就像这样复制
+enable = false # 仅作示例，不会触发
+keywords = ["测试关键词回复","test",""]
+reaction = "回答“测试成功”"
+
+[chinese_typo]
+enable = true # 是否启用中文错别字生成器
+error_rate=0.03 # 单字替换概率
+min_freq=7 # 最小字频阈值
+tone_error_rate=0.2 # 声调错误概率
+word_replace_rate=0.02 # 整词替换概率
+
 [others]
 enable_advance_output = true # 是否启用高级输出
 enable_kuuki_read = true # 是否启用读空气功能
@@ -80,49 +103,42 @@ ban_user_id = []  #禁止回复消息的QQ号
 
 [model.llm_reasoning] #回复模型1 主要回复模型
 name = "Pro/deepseek-ai/DeepSeek-R1"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 pri_in = 0 #模型的输入价格（非必填，可以记录消耗）
 pri_out = 0 #模型的输出价格（非必填，可以记录消耗）
 
+
 [model.llm_reasoning_minor] #回复模型3 次要回复模型
 name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 #非推理模型
 
 [model.llm_normal] #V3 回复模型2 次要回复模型
 name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.llm_normal_minor] #V2.5
 name = "deepseek-ai/DeepSeek-V2.5"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.llm_emotion_judge] #主题判断 0.7/m
 name = "Qwen/Qwen2.5-14B-Instruct"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.llm_topic_judge] #主题判断：建议使用qwen2.5 7b
 name = "Pro/Qwen/Qwen2.5-7B-Instruct"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.llm_summary_by_topic] #建议使用qwen2.5 32b 及以上
 name = "Qwen/Qwen2.5-32B-Instruct"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 pri_in = 0
 pri_out = 0
 
 [model.moderation] #内容审核 未启用
 name = ""
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 pri_in = 0
 pri_out = 0
 
@@ -130,8 +146,7 @@ pri_out = 0
 
 [model.vlm] #图像识别 0.35/m
 name = "Pro/Qwen/Qwen2-VL-7B-Instruct"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 
 
@@ -139,5 +154,4 @@ key = "SILICONFLOW_KEY"
 
 [model.embedding] #嵌入
 name = "BAAI/bge-m3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"

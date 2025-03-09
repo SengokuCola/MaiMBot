@@ -284,10 +284,13 @@ class ChineseTypoGenerator:
             
         返回:
             typo_sentence: 包含错别字的句子
-            typo_info: 错别字信息列表
+            correction_suggestion: 随机选择的一个纠正建议，返回正确的字/词
         """
         result = []
         typo_info = []
+        word_typos = []  # 记录词语错误对(错词,正确词)
+        char_typos = []  # 记录单字错误对(错字,正确字)
+        current_pos = 0
         
         # 分词
         words = self._segment_sentence(sentence)
@@ -296,6 +299,7 @@ class ChineseTypoGenerator:
             # 如果是标点符号或空格，直接添加
             if all(not self._is_chinese_char(c) for c in word):
                 result.append(word)
+                current_pos += len(word)
                 continue
                 
             # 获取词语的拼音
@@ -316,6 +320,8 @@ class ChineseTypoGenerator:
                                     ' '.join(word_pinyin), 
                                     ' '.join(self._get_word_pinyin(typo_word)), 
                                     orig_freq, typo_freq))
+                    word_typos.append((typo_word, word))  # 记录(错词,正确词)对
+                    current_pos += len(typo_word)
                     continue
             
             # 如果不进行整词替换，则进行单字替换
@@ -333,11 +339,15 @@ class ChineseTypoGenerator:
                             result.append(typo_char)
                             typo_py = pinyin(typo_char, style=Style.TONE3)[0][0]
                             typo_info.append((char, typo_char, py, typo_py, orig_freq, typo_freq))
+                            char_typos.append((typo_char, char))  # 记录(错字,正确字)对
+                            current_pos += 1
                             continue
                 result.append(char)
+                current_pos += 1
             else:
                 # 处理多字词的单字替换
                 word_result = []
+                word_start_pos = current_pos
                 for i, (char, py) in enumerate(zip(word, word_pinyin)):
                     # 词中的字替换概率降低
                     word_error_rate = self.error_rate * (0.7 ** (len(word) - 1))
@@ -353,11 +363,24 @@ class ChineseTypoGenerator:
                                 word_result.append(typo_char)
                                 typo_py = pinyin(typo_char, style=Style.TONE3)[0][0]
                                 typo_info.append((char, typo_char, py, typo_py, orig_freq, typo_freq))
+                                char_typos.append((typo_char, char))  # 记录(错字,正确字)对
                                 continue
                     word_result.append(char)
                 result.append(''.join(word_result))
+                current_pos += len(word)
         
-        return ''.join(result), typo_info
+        # 优先从词语错误中选择，如果没有则从单字错误中选择
+        correction_suggestion = None
+        # 50%概率返回纠正建议
+        if random.random() < 0.5:
+            if word_typos:
+                wrong_word, correct_word = random.choice(word_typos)
+                correction_suggestion = correct_word
+            elif char_typos:
+                wrong_char, correct_char = random.choice(char_typos)
+                correction_suggestion = correct_char
+        
+        return ''.join(result), correction_suggestion
 
     def format_typo_info(self, typo_info):
         """
@@ -419,16 +442,16 @@ def main():
     
     # 创建包含错别字的句子
     start_time = time.time()
-    typo_sentence, typo_info = typo_generator.create_typo_sentence(sentence)
+    typo_sentence, correction_suggestion = typo_generator.create_typo_sentence(sentence)
     
     # 打印结果
     print("\n原句：", sentence)
     print("错字版：", typo_sentence)
     
-    # 打印错别字信息
-    if typo_info:
-        print("\n错别字信息：")
-        print(typo_generator.format_typo_info(typo_info))
+    # 打印纠正建议
+    if correction_suggestion:
+        print("\n随机纠正建议：")
+        print(f"应该改为：{correction_suggestion}")
     
     # 计算并打印总耗时
     end_time = time.time()

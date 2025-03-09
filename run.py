@@ -1,7 +1,7 @@
 import os
 import subprocess
 import zipfile
-
+import sys
 import requests
 from tqdm import tqdm
 
@@ -105,6 +105,11 @@ def install_napcat():
 
 if __name__ == "__main__":
     os.system("cls")
+    if sys.version_info < (3, 9):
+        print("当前 Python 版本过低，最低版本为 3.9，请更新 Python 版本")
+        print("按任意键退出")
+        input()
+        exit(1)
     choice = input(
         "请输入要进行的操作：\n"
         "1.首次安装\n"

@@ -19,7 +19,7 @@ from src.common.database import Database
 
 # 从环境变量获取配置
 Database.initialize(
-    host=os.getenv("MONGODB_HOST", "localhost"),
+    host=os.getenv("MONGODB_HOST", "127.0.0.1"),
     port=int(os.getenv("MONGODB_PORT", "27017")),
     db_name=os.getenv("DATABASE_NAME", "maimai"),
     username=os.getenv("MONGODB_USERNAME"),

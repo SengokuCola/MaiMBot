@@ -2,47 +2,49 @@ services:
   napcat:
     container_name: napcat
     environment:
-      - tz=Asia/Shanghai
+      - TZ=Asia/Shanghai
       - NAPCAT_UID=${NAPCAT_UID}
-      - NAPCAT_GID=${NAPCAT_GID}
+      - NAPCAT_GID=${NAPCAT_GID} # 让 NapCat 获取当前用户 GID,UID，防止权限问题
     ports:
       - 3000:3000
       - 3001:3001
       - 6099:6099
-    restart: always
+    restart: unless-stopped
     volumes:
-      - napcatQQ:/app/.config/QQ
-      - napcatCONFIG:/app/napcat/config
-      - maimbotDATA:/MaiMBot/data # 麦麦的图片等要给napcat不然发送图片会有问题
+      - napcatQQ:/app/.config/QQ # 持久化 QQ 本体
+      - napcatCONFIG:/app/napcat/config # 持久化 NapCat 配置文件
+      - maimbotDATA:/MaiMBot/data # NapCat 和 NoneBot 共享此卷，否则发送图片会有问题
     image: mlikiowa/napcat-docker:latest
 
   mongodb:
     container_name: mongodb
     environment:
       - tz=Asia/Shanghai
+      # - MONGO_INITDB_ROOT_USERNAME=your_username
+      # - MONGO_INITDB_ROOT_PASSWORD=your_password
     expose:
       - "27017"
-    restart: always
+    restart: unless-stopped
     volumes:
-      - mongodb:/data/db
-      - mongodbCONFIG:/data/configdb
+      - mongodb:/data/db # 持久化 MongoDB 数据库
+      - mongodbCONFIG:/data/configdb # 持久化 MongoDB 配置文件
     image: mongo:latest
 
   maimbot:
     container_name: maimbot
     environment:
-      - tz=Asia/Shanghai
+      - TZ=Asia/Shanghai
     expose:
       - "8080"
-    restart: always
+    restart: unless-stopped
     depends_on:
       - mongodb
       - napcat
     volumes:
-      - napcatCONFIG:/MaiMBot/napcat # 自动根据配置中的qq号创建ws反向客户端配置
-      - ./bot_config.toml:/MaiMBot/config/bot_config.toml
-      - maimbotDATA:/MaiMBot/data
-      - ./.env.prod:/MaiMBot/.env.prod
+      - napcatCONFIG:/MaiMBot/napcat # 自动根据配置中的 QQ 号创建 ws 反向客户端配置
+      - ./bot_config.toml:/MaiMBot/config/bot_config.toml # Toml 配置文件映射
+      - maimbotDATA:/MaiMBot/data # NapCat 和 NoneBot 共享此卷，否则发送图片会有问题
+      - ./.env.prod:/MaiMBot/.env.prod # Toml 配置文件映射
     image: sengokucola/maimbot:latest
 
 volumes:

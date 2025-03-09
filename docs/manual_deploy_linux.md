@@ -77,7 +77,7 @@ pip install -r requirements.txt
 - 参考[NapCat官方文档](https://www.napcat.wiki/guide/boot/Shell#napcat-installer-linux%E4%B8%80%E9%94%AE%E4%BD%BF%E7%94%A8%E8%84%9A%E6%9C%AC-%E6%94%AF%E6%8C%81ubuntu-20-debian-10-centos9)安装
 
 -  使用QQ小号登录，添加反向WS地址：
-`ws://localhost:8080/onebot/v11/ws`
+`ws://127.0.0.1:8080/onebot/v11/ws`
 
 ---
 

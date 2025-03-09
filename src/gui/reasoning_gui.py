@@ -83,7 +83,7 @@ class ReasoningGUI:
         except RuntimeError:
             print("数据库未初始化，正在尝试初始化...")
             try:
-                Database.initialize("localhost", 27017, "maimai_bot")
+                Database.initialize("127.0.0.1", 27017, "maimai_bot")
                 self.db = Database.get_instance().db
                 print("数据库初始化成功")
             except Exception as e:

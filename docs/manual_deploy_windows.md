@@ -79,7 +79,7 @@ pip install -r requirements.txt
 
 ### 3️⃣ **配置NapCat，让麦麦bot与qq取得联系**
 - 安装并登录NapCat（用你的qq小号）
-- 添加反向WS：`ws://localhost:8080/onebot/v11/ws`
+- 添加反向WS：`ws://127.0.0.1:8080/onebot/v11/ws`
 
 ### 4️⃣ **配置文件设置，让麦麦Bot正常工作**
 - 修改环境配置文件：`.env.prod`

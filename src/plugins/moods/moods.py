@@ -51,11 +51,11 @@ class MoodManager:
         # 情绪词映射表 (valence, arousal)
         self.emotion_map = {
             'happy': (0.8, 0.6),      # 高愉悦度，中等唤醒度
-            'angry': (-0.7, 0.8),     # 负愉悦度，高唤醒度
+            'angry': (-0.7, 0.7),     # 负愉悦度，高唤醒度
             'sad': (-0.6, 0.3),       # 负愉悦度，低唤醒度
-            'surprised': (0.4, 0.9),  # 中等愉悦度，高唤醒度
+            'surprised': (0.4, 0.8),  # 中等愉悦度，高唤醒度
             'disgusted': (-0.8, 0.5), # 高负愉悦度，中等唤醒度
-            'fearful': (-0.7, 0.7),   # 负愉悦度，高唤醒度
+            'fearful': (-0.7, 0.6),   # 负愉悦度，高唤醒度
             'neutral': (0.0, 0.5),    # 中性愉悦度，中等唤醒度
         }
         
@@ -64,15 +64,20 @@ class MoodManager:
             # 第一象限：高唤醒，正愉悦
             (0.5, 0.7): "兴奋",
             (0.3, 0.8): "快乐",
+            (0.2, 0.65): "满足",
             # 第二象限：高唤醒，负愉悦
             (-0.5, 0.7): "愤怒",
             (-0.3, 0.8): "焦虑",
+            (-0.2, 0.65): "烦躁",
             # 第三象限：低唤醒，负愉悦
             (-0.5, 0.3): "悲伤",
-            (-0.3, 0.21): "疲倦",#避免0,0被识别为疲倦
+            (-0.3, 0.35): "疲倦",
+            (-0.4, 0.15): "疲倦",
             # 第四象限：低唤醒，正愉悦
-            (0.5, 0.3): "放松",
-            (0.3, 0.2): "平静"
+            (0.2, 0.45): "平静",
+            (0.3, 0.4): "安宁",
+            (0.5, 0.3): "放松"
+            
         }
 
     @classmethod
@@ -119,9 +124,13 @@ class MoodManager:
         current_time = time.time()
         time_diff = current_time - self.last_update
         
-        # 应用衰减公式
-        self.current_mood.valence *= math.pow(1 - self.decay_rate_valence, time_diff)
-        self.current_mood.arousal *= math.pow(1 - self.decay_rate_arousal, time_diff)
+        # Valence 向中性（0）回归
+        valence_target = 0.0
+        self.current_mood.valence = valence_target + (self.current_mood.valence - valence_target) * math.exp(-self.decay_rate_valence * time_diff)
+        
+        # Arousal 向中性（0.5）回归
+        arousal_target = 0.5
+        self.current_mood.arousal = arousal_target + (self.current_mood.arousal - arousal_target) * math.exp(-self.decay_rate_arousal * time_diff)
         
         # 确保值在合理范围内
         self.current_mood.valence = max(-1.0, min(1.0, self.current_mood.valence))

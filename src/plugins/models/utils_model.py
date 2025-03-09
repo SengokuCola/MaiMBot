@@ -23,6 +23,7 @@ class LLM_request:
             self.api_key = getattr(config, model["key"])
             self.base_url = getattr(config, model["base_url"])
         except AttributeError as e:
+            logger.error(f"原始 model dict 信息：{model}")
             logger.error(f"配置错误：找不到对应的配置项 - {str(e)}")
             raise ValueError(f"配置错误：找不到对应的配置项 - {str(e)}") from e
         self.model_name = model["name"]
@@ -181,6 +182,13 @@ class LLM_request:
                             continue
                         elif response.status in policy["abort_codes"]:
                             logger.error(f"错误码: {response.status} - {error_code_mapping.get(response.status)}")
+                            if response.status == 403 :
+                                if global_config.llm_normal == "Pro/deepseek-ai/DeepSeek-V3":
+                                    logger.error("可能是没有给硅基流动充钱，普通模型自动退化至非Pro模型，反应速度可能会变慢")
+                                    global_config.llm_normal = "deepseek-ai/DeepSeek-V3"
+                                if global_config.llm_reasoning == "Pro/deepseek-ai/DeepSeek-R1":
+                                    logger.error("可能是没有给硅基流动充钱，推理模型自动退化至非Pro模型，反应速度可能会变慢")
+                                    global_config.llm_reasoning = "deepseek-ai/DeepSeek-R1"
                             raise RuntimeError(f"请求被拒绝: {error_code_mapping.get(response.status)}")
                             
                         response.raise_for_status()
