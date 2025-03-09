@@ -4,7 +4,7 @@
 
 本项目需要配置两个主要文件：
 1. `.env.prod` - 配置API服务和系统环境
-2. `bot_config.toml` - 配置机器人行为和模型
+2. `config/bot_config.toml` - 配置机器人行为和模型
 
 ## API配置说明
 
@@ -34,10 +34,12 @@ key = "SILICONFLOW_KEY"            # 引用.env.prod中定义的密钥
 如需切换到其他API服务，只需修改引用：
 ```toml
 [model.llm_reasoning]
-name = "Pro/deepseek-ai/DeepSeek-R1"
+name = "deepseek-chat"           # 修改为Deepseek模型名称，此处以DeepSeek-V3为例
 base_url = "DEEP_SEEK_BASE_URL"  # 切换为DeepSeek服务
 key = "DEEP_SEEK_KEY"            # 使用DeepSeek密钥
 ```
+
+name中内容请参考[deepseek官方文档](https://api-docs.deepseek.com/zh-cn)或者[硅基流动模型广场](https://cloud.siliconflow.cn/models)
 
 ## 配置文件详解
 
@@ -55,7 +57,7 @@ CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1
 HOST=127.0.0.1
 PORT=8080
 
-# 数据库配置
+# MongoDB数据库配置
 MONGODB_HOST=127.0.0.1
 MONGODB_PORT=27017
 DATABASE_NAME=MegBot
@@ -73,10 +75,11 @@ PLUGINS=["src2.plugins.chat"]
 qq = "机器人QQ号"  # 必填
 nickname = "麦麦"  # 机器人昵称
 
-[personality]
+[personality]  #机器人性格提示词
 prompt_personality = [
-    "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",
-    "是一个女大学生，你有黑色头发，你会刷小红书"
+        "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",    # 贴吧人格 
+        "是一个女大学生，你有黑色头发，你会刷小红书",    # 小红书人格
+        "是一个女大学生，你会刷b站，对ACG文化感兴趣"    # b站人格
 ]
 prompt_schedule = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
 
@@ -89,10 +92,10 @@ ban_words = []  # 禁用词列表
 [emoji]
 auto_save = true  # 自动保存表情
 enable_check = false  # 启用表情审核
-check_prompt = "符合公序良俗"
+check_prompt = "符合公序良俗"  # 表情包过滤要求
 
 [groups]
-talk_allowed = []      # 允许对话的群号
+talk_allowed = []      # 允许对话的群号，必填
 talk_frequency_down = []   # 降低回复频率的群号
 ban_user_id = []      # 禁止回复的用户QQ号
 
