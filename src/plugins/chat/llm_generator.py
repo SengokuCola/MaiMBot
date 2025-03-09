@@ -133,7 +133,7 @@ class ResponseGenerator:
         """提取情感标签"""
         try:
             prompt = f'''请根据他的发言，从"happy,angry,sad,surprised,disgusted,fearful,neutral"中选出最匹配的1个情感标签并输出
-            只输出标签就好，不要输出其他内容:
+            仅输出标签，不要输出其他内容:
             性格：{global_config.PROMPT_PERSONALITY[0]}
             发言：{content}
             输出：
