@@ -33,7 +33,7 @@ class EmojiManager:
         self.db = Database.get_instance()
         self._scan_task = None
         self.vlm = LLM_request(model=global_config.vlm, temperature=0.3, max_tokens=1000)
-        self.llm_emotion_judge = LLM_request(model=global_config.llm_normal_minor, max_tokens=60,temperature=0.8) #更高的温度，更少的token（后续可以根据情绪来调整温度）
+        self.llm_emotion_judge = LLM_request(model=global_config.llm_emotion_judge, max_tokens=60,temperature=0.8) #更高的温度，更少的token（后续可以根据情绪来调整温度）
         
     def _ensure_emoji_dir(self):
         """确保表情存储目录存在"""
