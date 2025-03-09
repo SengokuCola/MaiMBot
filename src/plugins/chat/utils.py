@@ -7,6 +7,7 @@ from typing import Dict, List
 import jieba
 import numpy as np
 from nonebot import get_driver
+from loguru import logger
 
 from ..models.utils_model import LLM_request
 from ..utils.typo_generator import ChineseTypoGenerator
@@ -39,16 +40,16 @@ def combine_messages(messages: List[Message]) -> str:
 
 
 def db_message_to_str(message_dict: Dict) -> str:
-    print(f"message_dict: {message_dict}")
+    logger.debug(f"message_dict: {message_dict}")
     time_str = time.strftime("%m-%d %H:%M:%S", time.localtime(message_dict["time"]))
     try:
         name = "[(%s)%s]%s" % (
-        message_dict['user_id'], message_dict.get("user_nickname", ""), message_dict.get("user_cardname", ""))
+            message_dict['user_id'], message_dict.get("user_nickname", ""), message_dict.get("user_cardname", ""))
     except:
         name = message_dict.get("user_nickname", "") or f"用户{message_dict['user_id']}"
     content = message_dict.get("processed_plain_text", "")
     result = f"[{time_str}] {name}: {content}\n"
-    print(f"result: {result}")
+    logger.debug(f"result: {result}")
     return result
 
 
@@ -182,7 +183,7 @@ async def get_recent_group_messages(db, group_id: int, limit: int = 12) -> list:
             await msg.initialize()
             message_objects.append(msg)
         except KeyError:
-            print("[WARNING] 数据库中存在无效的消息")
+            logger.warning("数据库中存在无效的消息")
             continue
 
     # 按时间正序排列
@@ -298,9 +299,8 @@ def split_into_sentences_w_remove_punctuation(text: str) -> List[str]:
             sentence = sentence.replace('，', ' ').replace(',', ' ')
         sentences_done.append(sentence)
 
-    print(f"处理后的句子: {sentences_done}")
+    logger.info(f"处理后的句子: {sentences_done}")
     return sentences_done
-
 
 
 def random_remove_punctuation(text: str) -> str:
@@ -330,11 +330,10 @@ def random_remove_punctuation(text: str) -> str:
     return result
 
 
-
 def process_llm_response(text: str) -> List[str]:
     # processed_response = process_text_with_typos(content)
     if len(text) > 200:
-        print(f"回复过长 ({len(text)} 字符)，返回默认回复")
+        logger.warning(f"回复过长 ({len(text)} 字符)，返回默认回复")
         return ['懒得说']
     # 处理长消息
     typo_generator = ChineseTypoGenerator(
@@ -354,9 +353,9 @@ def process_llm_response(text: str) -> List[str]:
         else:
             sentences.append(sentence)
     # 检查分割后的消息数量是否过多（超过3条）
-    
+
     if len(sentences) > 5:
-        print(f"分割后消息数量过多 ({len(sentences)} 条)，返回默认回复")
+        logger.warning(f"分割后消息数量过多 ({len(sentences)} 条)，返回默认回复")
         return [f'{global_config.BOT_NICKNAME}不知道哦']
 
     return sentences
@@ -378,15 +377,15 @@ def calculate_typing_time(input_string: str, chinese_time: float = 0.4, english_
     mood_arousal = mood_manager.current_mood.arousal
     # 映射到0.5到2倍的速度系数
     typing_speed_multiplier = 1.5 ** mood_arousal  # 唤醒度为1时速度翻倍,为-1时速度减半
-    chinese_time *= 1/typing_speed_multiplier
-    english_time *= 1/typing_speed_multiplier
+    chinese_time *= 1 / typing_speed_multiplier
+    english_time *= 1 / typing_speed_multiplier
     # 计算中文字符数
     chinese_chars = sum(1 for char in input_string if '\u4e00' <= char <= '\u9fff')
-    
+
     # 如果只有一个中文字符，使用3倍时间
     if chinese_chars == 1 and len(input_string.strip()) == 1:
         return chinese_time * 3 + 0.3  # 加上回车时间
-        
+
     # 正常计算所有字符的输入时间
     total_time = 0.0
     for char in input_string:

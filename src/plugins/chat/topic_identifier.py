@@ -4,9 +4,11 @@ from nonebot import get_driver
 
 from ..models.utils_model import LLM_request
 from .config import global_config
+from loguru import logger
 
 driver = get_driver()
-config = driver.config  
+config = driver.config
+
 
 class TopicIdentifier:
     def __init__(self):
@@ -23,19 +25,20 @@ class TopicIdentifier:
 
         # 使用 LLM_request 类进行请求
         topic, _ = await self.llm_topic_judge.generate_response(prompt)
-        
+
         if not topic:
-            print("\033[1;31m[错误]\033[0m LLM API 返回为空")
+            logger.error("LLM API 返回为空")
             return None
-            
+
         # 直接在这里处理主题解析
         if not topic or topic == "无主题":
             return None
-            
+
         # 解析主题字符串为列表
         topic_list = [t.strip() for t in topic.split(",") if t.strip()]
-        
-        print(f"\033[1;32m[主题识别]\033[0m 主题: {topic_list}")
+
+        logger.info(f"主题: {topic_list}")
         return topic_list if topic_list else None
+
 
 topic_identifier = TopicIdentifier()

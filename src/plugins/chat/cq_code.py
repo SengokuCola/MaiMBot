@@ -4,6 +4,7 @@ import os
 import time
 from dataclasses import dataclass
 from typing import Dict, Optional
+from loguru import logger
 
 import requests
 
@@ -151,11 +152,11 @@ class CQCode:
 
             except (requests.exceptions.SSLError, requests.exceptions.HTTPError) as e:
                 if retry == max_retries - 1:
-                    print(f"\033[1;31m[致命错误]\033[0m 最终请求失败: {str(e)}")
+                    logger.error(f"最终请求失败: {str(e)}")
                 time.sleep(1.5 ** retry)  # 指数退避
 
             except Exception as e:
-                print(f"\033[1;33m[未知错误]\033[0m {str(e)}")
+                logger.exception(f"[未知错误]")
                 return None
 
         return None
@@ -194,7 +195,7 @@ class CQCode:
             description, _ = await self._llm.generate_response_for_image(prompt, image_base64)
             return f"[表情包：{description}]"
         except Exception as e:
-            print(f"\033[1;31m[错误]\033[0m AI接口调用失败: {str(e)}")
+            logger.exception(f"AI接口调用失败: {str(e)}")
             return "[表情包]"
 
     async def get_image_description(self, image_base64: str) -> str:
@@ -205,7 +206,7 @@ class CQCode:
             description, _ = await self._llm.generate_response_for_image(prompt, image_base64)
             return f"[图片：{description}]"
         except Exception as e:
-            print(f"\033[1;31m[错误]\033[0m AI接口调用失败: {str(e)}")
+            logger.exception(f"AI接口调用失败: {str(e)}")
             return "[图片]"
 
     async def translate_forward(self) -> str:
@@ -222,7 +223,7 @@ class CQCode:
             try:
                 messages = ast.literal_eval(content)
             except ValueError as e:
-                print(f"\033[1;31m[错误]\033[0m 解析转发消息内容失败: {str(e)}")
+                logger.error(f"解析转发消息内容失败: {str(e)}")
                 return '[转发消息]'
 
             # 处理每条消息
@@ -277,11 +278,11 @@ class CQCode:
 
             # 合并所有消息
             combined_messages = '\n'.join(formatted_messages)
-            print(f"\033[1;34m[调试信息]\033[0m 合并后的转发消息: {combined_messages}")
+            logger.debug(f"合并后的转发消息: {combined_messages}")
             return f"[转发消息:\n{combined_messages}]"
 
         except Exception as e:
-            print(f"\033[1;31m[错误]\033[0m 处理转发消息失败: {str(e)}")
+            logger.exception("处理转发消息失败")
             return '[转发消息]'
 
     async def translate_reply(self) -> str:
@@ -307,7 +308,7 @@ class CQCode:
                 return f"[回复 {self.reply_message.sender.nickname} 的消息: {message_obj.processed_plain_text}]"
 
         else:
-            print("\033[1;31m[错误]\033[0m 回复消息的sender.user_id为空")
+            logger.error("回复消息的sender.user_id为空")
             return '[回复某人消息]'
 
     @staticmethod

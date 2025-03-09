@@ -28,10 +28,10 @@ class LLM_request:
             raise ValueError(f"配置错误：找不到对应的配置项 - {str(e)}") from e
         self.model_name = model["name"]
         self.params = kwargs
-        
+
         self.pri_in = model.get("pri_in", 0)
         self.pri_out = model.get("pri_out", 0)
-        
+
         # 获取数据库实例
         self.db = Database.get_instance()
         self._init_database()
@@ -47,9 +47,9 @@ class LLM_request:
         except Exception as e:
             logger.error(f"创建数据库索引失败: {e}")
 
-    def _record_usage(self, prompt_tokens: int, completion_tokens: int, total_tokens: int, 
-                     user_id: str = "system", request_type: str = "chat", 
-                     endpoint: str = "/chat/completions"):
+    def _record_usage(self, prompt_tokens: int, completion_tokens: int, total_tokens: int,
+                      user_id: str = "system", request_type: str = "chat",
+                      endpoint: str = "/chat/completions"):
         """记录模型使用情况到数据库
         Args:
             prompt_tokens: 输入token数
@@ -140,12 +140,12 @@ class LLM_request:
         }
 
         api_url = f"{self.base_url.rstrip('/')}/{endpoint.lstrip('/')}"
-        #判断是否为流式
+        # 判断是否为流式
         stream_mode = self.params.get("stream", False)
         if self.params.get("stream", False) is True:
-            logger.info(f"进入流式输出模式，发送请求到URL: {api_url}")
+            logger.debug(f"进入流式输出模式，发送请求到URL: {api_url}")
         else:
-            logger.info(f"发送请求到URL: {api_url}")
+            logger.debug(f"发送请求到URL: {api_url}")
         logger.info(f"使用模型: {self.model_name}")
 
         # 构建请求体
@@ -158,7 +158,7 @@ class LLM_request:
             try:
                 # 使用上下文管理器处理会话
                 headers = await self._build_headers()
-                #似乎是openai流式必须要的东西,不过阿里云的qwq-plus加了这个没有影响
+                # 似乎是openai流式必须要的东西,不过阿里云的qwq-plus加了这个没有影响
                 if stream_mode:
                     headers["Accept"] = "text/event-stream"
 
@@ -184,29 +184,31 @@ class LLM_request:
                             logger.error(f"错误码: {response.status} - {error_code_mapping.get(response.status)}")
                             if response.status == 403:
                                 # 尝试降级Pro模型
-                                if self.model_name.startswith("Pro/") and self.base_url == "https://api.siliconflow.cn/v1/":
+                                if self.model_name.startswith(
+                                        "Pro/") and self.base_url == "https://api.siliconflow.cn/v1/":
                                     old_model_name = self.model_name
                                     self.model_name = self.model_name[4:]  # 移除"Pro/"前缀
                                     logger.warning(f"检测到403错误，模型从 {old_model_name} 降级为 {self.model_name}")
-                                    
+
                                     # 对全局配置进行更新
-                                    if hasattr(global_config, 'llm_normal') and global_config.llm_normal.get('name') == old_model_name:
+                                    if hasattr(global_config, 'llm_normal') and global_config.llm_normal.get(
+                                            'name') == old_model_name:
                                         global_config.llm_normal['name'] = self.model_name
                                         logger.warning(f"已将全局配置中的 llm_normal 模型降级")
-                                    
+
                                     # 更新payload中的模型名
                                     if payload and 'model' in payload:
                                         payload['model'] = self.model_name
-                                    
+
                                     # 重新尝试请求
                                     retry -= 1  # 不计入重试次数
                                     continue
-                            
+
                             raise RuntimeError(f"请求被拒绝: {error_code_mapping.get(response.status)}")
-                            
+
                         response.raise_for_status()
-                        
-                        #将流式输出转化为非流式输出
+
+                        # 将流式输出转化为非流式输出
                         if stream_mode:
                             accumulated_content = ""
                             async for line_bytes in response.content:
@@ -233,12 +235,15 @@ class LLM_request:
                                 reasoning_content = think_match.group(1).strip()
                             content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
                             # 构造一个伪result以便调用自定义响应处理器或默认处理器
-                            result = {"choices": [{"message": {"content": content, "reasoning_content": reasoning_content}}]}
-                            return response_handler(result) if response_handler else self._default_response_handler(result, user_id, request_type, endpoint)
+                            result = {
+                                "choices": [{"message": {"content": content, "reasoning_content": reasoning_content}}]}
+                            return response_handler(result) if response_handler else self._default_response_handler(
+                                result, user_id, request_type, endpoint)
                         else:
                             result = await response.json()
                             # 使用自定义处理器或默认处理
-                            return response_handler(result) if response_handler else self._default_response_handler(result, user_id, request_type, endpoint)
+                            return response_handler(result) if response_handler else self._default_response_handler(
+                                result, user_id, request_type, endpoint)
 
             except Exception as e:
                 if retry < policy["max_retries"] - 1:
@@ -252,8 +257,8 @@ class LLM_request:
 
         logger.error("达到最大重试次数，请求仍然失败")
         raise RuntimeError("达到最大重试次数，API请求仍然失败")
-        
-    async def _transform_parameters(self, params: dict) ->dict:
+
+    async def _transform_parameters(self, params: dict) -> dict:
         """
         根据模型名称转换参数：
         - 对于需要转换的OpenAI CoT系列模型（例如 "o3-mini"），删除 'temprature' 参数，
@@ -262,7 +267,8 @@ class LLM_request:
         # 复制一份参数，避免直接修改原始数据
         new_params = dict(params)
         # 定义需要转换的模型列表
-        models_needing_transformation = ["o3-mini", "o1-mini", "o1-preview", "o1-2024-12-17", "o1-preview-2024-09-12", "o3-mini-2025-01-31", "o1-mini-2024-09-12"]
+        models_needing_transformation = ["o3-mini", "o1-mini", "o1-preview", "o1-2024-12-17", "o1-preview-2024-09-12",
+                                         "o3-mini-2025-01-31", "o1-mini-2024-09-12"]
         if self.model_name.lower() in models_needing_transformation:
             # 删除 'temprature' 参数（如果存在）
             new_params.pop("temperature", None)
@@ -298,13 +304,13 @@ class LLM_request:
                 **params_copy
             }
         # 如果 payload 中依然存在 max_tokens 且需要转换，在这里进行再次检查
-        if self.model_name.lower() in ["o3-mini", "o1-mini", "o1-preview", "o1-2024-12-17", "o1-preview-2024-09-12", "o3-mini-2025-01-31", "o1-mini-2024-09-12"] and "max_tokens" in payload:
+        if self.model_name.lower() in ["o3-mini", "o1-mini", "o1-preview", "o1-2024-12-17", "o1-preview-2024-09-12",
+                                       "o3-mini-2025-01-31", "o1-mini-2024-09-12"] and "max_tokens" in payload:
             payload["max_completion_tokens"] = payload.pop("max_tokens")
         return payload
-        
 
-    def _default_response_handler(self, result: dict, user_id: str = "system", 
-                                request_type: str = "chat", endpoint: str = "/chat/completions") -> Tuple:
+    def _default_response_handler(self, result: dict, user_id: str = "system",
+                                  request_type: str = "chat", endpoint: str = "/chat/completions") -> Tuple:
         """默认响应解析"""
         if "choices" in result and result["choices"]:
             message = result["choices"][0]["message"]
@@ -356,8 +362,8 @@ class LLM_request:
             return {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
-            } 
-        # 防止小朋友们截图自己的key
+            }
+            # 防止小朋友们截图自己的key
 
     async def generate_response(self, prompt: str) -> Tuple[str, str]:
         """根据输入的提示生成模型的异步响应"""
@@ -404,6 +410,7 @@ class LLM_request:
         Returns:
             list: embedding向量，如果失败则返回None
         """
+
         def embedding_handler(result):
             """处理响应"""
             if "data" in result and len(result["data"]) > 0:
@@ -425,4 +432,3 @@ class LLM_request:
             response_handler=embedding_handler
         )
         return embedding
-

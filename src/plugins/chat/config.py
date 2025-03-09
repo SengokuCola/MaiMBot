@@ -162,7 +162,7 @@ class BotConfig:
             personality_config = parent['personality']
             personality = personality_config.get('prompt_personality')
             if len(personality) >= 2:
-                logger.info(f"载入自定义人格:{personality}")
+                logger.debug(f"载入自定义人格:{personality}")
                 config.PROMPT_PERSONALITY = personality_config.get('prompt_personality', config.PROMPT_PERSONALITY)
             logger.info(f"载入自定义日程prompt:{personality_config.get('prompt_schedule', config.PROMPT_SCHEDULE_GEN)}")
             config.PROMPT_SCHEDULE_GEN = personality_config.get('prompt_schedule', config.PROMPT_SCHEDULE_GEN)

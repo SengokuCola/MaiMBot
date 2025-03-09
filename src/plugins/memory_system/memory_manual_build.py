@@ -743,7 +743,7 @@ class Hippocampus:
 
     async def memory_activate_value(self, text: str, max_topics: int = 5, similarity_threshold: float = 0.3) -> int:
         """计算输入文本对记忆的激活程度"""
-        print(f"\033[1;32m[记忆激活]\033[0m 识别主题: {await self._identify_topics(text)}")
+        logger.info(f"[记忆激活]识别主题: {await self._identify_topics(text)}")
         
         identified_topics = await self._identify_topics(text)
         if not identified_topics:

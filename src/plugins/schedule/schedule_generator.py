@@ -57,12 +57,12 @@ class ScheduleGenerator:
 
         existing_schedule = self.db.db.schedule.find_one({"date": date_str})
         if existing_schedule:
-            logger.info(f"{date_str}的日程已存在:")
+            logger.debug(f"{date_str}的日程已存在:")
             schedule_text = existing_schedule["schedule"]
             # print(self.schedule_text)
 
-        elif read_only == False:
-            logger.info(f"{date_str}的日程不存在，准备生成新的日程。")
+        elif not read_only:
+            logger.debug(f"{date_str}的日程不存在，准备生成新的日程。")
             prompt = f"""我是{global_config.BOT_NICKNAME}，{global_config.PROMPT_SCHEDULE_GEN}，请为我生成{date_str}（{weekday}）的日程安排，包括：""" + \
                      """
             1. 早上的学习和工作安排
@@ -78,7 +78,7 @@ class ScheduleGenerator:
                 schedule_text = "生成日程时出错了"
             # print(self.schedule_text)
         else:
-            logger.info(f"{date_str}的日程不存在。")
+            logger.debug(f"{date_str}的日程不存在。")
             schedule_text = "忘了"
 
             return schedule_text, None
@@ -154,10 +154,10 @@ class ScheduleGenerator:
             logger.warning("今日日程有误，将在下次运行时重新生成")
             self.db.db.schedule.delete_one({"date": datetime.datetime.now().strftime("%Y-%m-%d")})
         else:
-            logger.info("\n=== 今日日程安排 ===")
+            logger.info("=== 今日日程安排 ===")
             for time_str, activity in self.today_schedule.items():
                 logger.info(f"时间[{time_str}]: 活动[{activity}]")
-            logger.info("==================\n")
+            logger.info("==================")
 
 
 # def main():
