@@ -132,9 +132,10 @@ class ResponseGenerator:
     async def _get_emotion_tags(self, content: str) -> List[str]:
         """提取情感标签"""
         try:
-            prompt = f'''请从以下内容中，从"happy,angry,sad,surprised,disgusted,fearful,neutral"中选出最匹配的1个情感标签并输出
+            prompt = f'''请根据他的发言，从"happy,angry,sad,surprised,disgusted,fearful,neutral"中选出最匹配的1个情感标签并输出
             只输出标签就好，不要输出其他内容:
-            内容：{content}
+            性格：{global_config.PROMPT_PERSONALITY[0]}
+            发言：{content}
             输出：
             '''
             content, _ = await self.model_v25.generate_response(prompt)
