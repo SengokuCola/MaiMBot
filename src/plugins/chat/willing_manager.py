@@ -35,10 +35,6 @@ class WillingManager:
             current_willing += 0.05
             print(f"被重复提及, 当前意愿: {current_willing}")
         
-        if is_emoji:
-            current_willing *= 0.1
-            print(f"表情包, 当前意愿: {current_willing}")
-        
         print(f"放大系数_interested_rate: {global_config.response_interested_rate_amplifier}")
         interested_rate *= global_config.response_interested_rate_amplifier #放大回复兴趣度
         if interested_rate > 0.4:
@@ -49,6 +45,11 @@ class WillingManager:
         # print(f"放大系数_willing: {global_config.response_willing_amplifier}, 当前意愿: {current_willing}")
         
         reply_probability = max((current_willing - 0.45) * 2, 0)
+        
+        if is_emoji:
+            reply_probability *= 0.1
+            print(f"表情包, 当前可能性 {reply_probability}")
+        
         if group_id not in config.talk_allowed_groups:
             current_willing = 0
             reply_probability = 0
