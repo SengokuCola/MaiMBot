@@ -52,19 +52,13 @@ def db_message_to_str(message_dict: Dict) -> str:
     return result
 
 
-def is_mentioned_bot_in_message(message: Message) -> bool:
-    """检查消息是否提到了机器人"""
-    keywords = [global_config.BOT_NICKNAME]
-    for keyword in keywords:
-        if keyword in message.processed_plain_text:
-            return True
-    return False
-
-
 def is_mentioned_bot_in_txt(message: str) -> bool:
     """检查消息是否提到了机器人"""
-    keywords = [global_config.BOT_NICKNAME]
-    for keyword in keywords:
+    if global_config.BOT_NICKNAME is None:
+        return True
+    if global_config.BOT_NICKNAME in message:
+        return True
+    for keyword in global_config.BOT_ALIAS_NAMES:
         if keyword in message:
             return True
     return False

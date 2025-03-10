@@ -4,6 +4,7 @@ version = "0.0.3"
 [bot]
 qq = 123
 nickname = "麦麦"
+alias_names = ["小麦", "阿麦"]
 
 [personality]
 prompt_personality = [

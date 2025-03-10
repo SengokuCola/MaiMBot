@@ -72,6 +72,7 @@ PLUGINS=["src2.plugins.chat"]
 [bot]
 qq = "机器人QQ号"  # 必填
 nickname = "麦麦"  # 机器人昵称
+alias_names = ["小麦", "阿麦"] # 机器人别名
 
 [personality]
 prompt_personality = [

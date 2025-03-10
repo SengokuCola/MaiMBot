@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import tomli
 from loguru import logger
@@ -15,6 +15,7 @@ class BotConfig:
 
     BOT_QQ: Optional[int] = 1
     BOT_NICKNAME: Optional[str] = None
+    BOT_ALIAS_NAMES: List[str] = field(default_factory=list) # 别名，可以通过这个叫它
     
     # 消息处理相关配置
     MIN_TEXT_LENGTH: int = 2  # 最小处理文本长度
@@ -186,6 +187,7 @@ class BotConfig:
             bot_qq = bot_config.get("qq")
             config.BOT_QQ = int(bot_qq)
             config.BOT_NICKNAME = bot_config.get("nickname", config.BOT_NICKNAME)
+            config.BOT_ALIAS_NAMES = bot_config.get("alias_names", config.BOT_ALIAS_NAMES)
 
         def response(parent: dict):
             response_config = parent["response"]
