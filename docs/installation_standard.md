@@ -72,7 +72,9 @@ PLUGINS=["src2.plugins.chat"]
 [bot]
 qq = "机器人QQ号"  # 必填
 nickname = "麦麦"  # 机器人昵称
-alias_names = ["小麦", "阿麦"] # 机器人别名
+# alias_names: 配置机器人可使用的别名。当机器人在群聊或对话中被调用时，别名可以作为直接命令或提及机器人的关键字使用。
+# 该配置项为字符串数组。例如: ["小麦", "阿麦"]
+alias_names = ["小麦", "阿麦"]  # 机器人别名
 
 [personality]
 prompt_personality = [
