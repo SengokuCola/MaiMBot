@@ -203,7 +203,7 @@ class EmojiManager:
         try:
             prompt = f'这是{global_config.BOT_NICKNAME}将要发送的消息内容:\n{text}\n若要为其配上表情包，请你输出这个表情包应该表达怎样的情感，应该给人什么样的感觉，不要太简洁也不要太长，注意不要输出任何对消息内容的分析内容，只输出\"一种什么样的感觉\"中间的形容词部分。'
 
-            content, _ = await self.llm_emotion_judge.generate_response_async(prompt)
+            content, _ = await self.llm_emotion_judge.generate_response_async(prompt,temperature=1.5)
             logger.info(f"输出描述: {content}")
             return content
 
