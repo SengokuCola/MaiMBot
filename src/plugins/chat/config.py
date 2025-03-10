@@ -43,6 +43,7 @@ class BotConfig:
     EMOJI_CHECK_PROMPT: str = "符合公序良俗"  # 表情包过滤要求
 
     ban_words = set()
+    ban_msgs_regex = set()
 
     max_response_length: int = 1024  # 最大回复长度
 
@@ -277,6 +278,9 @@ class BotConfig:
                 config.response_interested_rate_amplifier = msg_config.get("response_interested_rate_amplifier",
                                                                            config.response_interested_rate_amplifier)
                 config.down_frequency_rate = msg_config.get("down_frequency_rate", config.down_frequency_rate)
+            
+            if config.INNER_VERSION in SpecifierSet(">=0.0.5"):
+                config.ban_msgs_regex = msg_config.get("ban_msgs_regex", config.ban_msgs_regex)
 
         def memory(parent: dict):
             memory_config = parent["memory"]

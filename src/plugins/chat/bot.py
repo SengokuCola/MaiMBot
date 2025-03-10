@@ -1,3 +1,4 @@
+import re
 import time
 from random import random
 
@@ -73,6 +74,14 @@ class ChatBot:
                 logger.info(
                     f"[{message.group_name}]{message.user_nickname}:{message.processed_plain_text}")
                 logger.info(f"[过滤词识别]消息中含有{word}，filtered")
+                return
+
+        # 正则表达式过滤
+        for pattern in global_config.ban_msgs_regex:
+            if re.search(pattern, message.raw_message):
+                logger.info(
+                    f"[{message.group_name}]{message.user_nickname}:{message.raw_message}")
+                logger.info(f"[正则表达式过滤]消息匹配到{pattern}，filtered")
                 return
 
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(message.time))
