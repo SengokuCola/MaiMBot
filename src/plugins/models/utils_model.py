@@ -174,7 +174,7 @@ class LLM_request:
                                 payload = await self._build_payload(prompt, image_base64)
                             elif response.status in [500, 503]:
                                 logger.error(f"错误码: {response.status} - {error_code_mapping.get(response.status)}")
-                                raise RuntimeError("服务器负载过高，模型恢复失败QAQ")
+                                raise RuntimeError("服务器负载过高，模型回复失败QAQ")
                             else:
                                 logger.warning(f"请求限制(429)，等待{wait_time}秒后重试...")
 
