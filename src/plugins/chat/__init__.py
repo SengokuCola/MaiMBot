@@ -5,7 +5,7 @@ import time
 
 from loguru import logger
 from nonebot import get_driver, on_command, on_message, require
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment,MessageEvent
 from nonebot.rule import to_me
 from nonebot.typing import T_State
 
@@ -103,7 +103,7 @@ async def _(bot: Bot):
     print("\033[1;38;5;208m-----------开始偷表情包！-----------\033[0m")
     
 @group_msg.handle()
-async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
+async def _(bot: Bot, event: MessageEvent, state: T_State):
     await chat_bot.handle_message(event, bot)
 
 # 添加build_memory定时任务

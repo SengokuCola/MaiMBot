@@ -82,6 +82,7 @@ enable_kuuki_read = true # 是否启用读空气功能
 talk_allowed = [
     123,
     123,
+    #0, 如果填0则开启私聊功能
 ]  #可以回复消息的群
 talk_frequency_down = []  #降低回复频率的群
 ban_user_id = []  #禁止回复消息的QQ号
