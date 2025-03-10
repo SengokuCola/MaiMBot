@@ -20,6 +20,7 @@ class BotConfig:
     MIN_TEXT_LENGTH: int = 2  # 最小处理文本长度
     MAX_CONTEXT_SIZE: int = 15  # 上下文最大消息数
     emoji_chance: float = 0.2  # 发送表情包的基础概率
+    MIN_RESPONSE_RATE: float = 0.0  # 最小回复概率
     
     ENABLE_PIC_TRANSLATE: bool = True  # 是否启用图片翻译
     
@@ -266,6 +267,7 @@ class BotConfig:
             config.MAX_CONTEXT_SIZE = msg_config.get("max_context_size", config.MAX_CONTEXT_SIZE)
             config.emoji_chance = msg_config.get("emoji_chance", config.emoji_chance)
             config.ban_words=msg_config.get("ban_words",config.ban_words)
+            config.MIN_RESPONSE_RATE = msg_config.get("min_response_rate", config.MIN_RESPONSE_RATE)
 
             if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
                 config.thinking_timeout = msg_config.get("thinking_timeout", config.thinking_timeout)
