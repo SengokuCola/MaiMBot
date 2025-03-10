@@ -759,7 +759,7 @@ start_time = time.time()
 
 Database.initialize(
     host=config.MONGODB_HOST,
-    port=config.MONGODB_PORT,
+    port=int(config.MONGODB_PORT),
     db_name=config.DATABASE_NAME,
     username=config.MONGODB_USERNAME,
     password=config.MONGODB_PASSWORD,
