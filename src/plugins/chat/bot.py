@@ -1,5 +1,6 @@
 import time
 from random import random
+import asyncio
 
 from loguru import logger
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
@@ -88,6 +89,12 @@ class ChatBot:
         await self.storage.store_message(message, topic[0] if topic else None)
 
         is_mentioned = is_mentioned_bot_in_txt(message.processed_plain_text)
+
+        if is_mentioned:
+            #如果被@等待下文10秒
+            await asyncio.sleep(10)
+            logger.info(f"被@，等待下文")
+
         reply_probability = willing_manager.change_reply_willing_received(
             event.group_id,
             topic[0] if topic else None,

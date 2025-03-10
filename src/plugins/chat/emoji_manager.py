@@ -177,7 +177,7 @@ class EmojiManager:
     async def _get_emoji_discription(self, image_base64: str) -> str:
         """获取表情包的标签"""
         try:
-            prompt = '这是一个表情包，使用中文简洁的描述一下表情包的内容和表情包所表达的情感'
+            prompt = '这是一个表情包，使用中文简洁的描述一下表情包的内容、上面的文字和表情包所表达的情感'
 
             content, _ = await self.vlm.generate_response_for_image(prompt, image_base64)
             logger.debug(f"输出描述: {content}")
