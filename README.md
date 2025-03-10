@@ -1,5 +1,4 @@
-# 麦麦！MaiMBot (编辑中) 
-
+# 麦麦！MaiMBot (编辑中)
 
 <div align="center">
 
@@ -30,6 +29,7 @@
 </div>
 
 > ⚠️ **注意事项**
+>
 > - 项目处于活跃开发阶段，代码可能随时更改
 > - 文档未完善，有问题可以提交 Issue 或者 Discussion
 > - QQ机器人存在被限制风险，请自行了解，谨慎使用
@@ -44,7 +44,6 @@
 
 - (由 [CabLate](https://github.com/cablate) 贡献) [Telegram 与其他平台(未来可能会有)的版本](https://github.com/cablate/MaiMBot/tree/telegram) - [集中讨论串](https://github.com/SengokuCola/MaiMBot/discussions/149)
 
-## 
 <div align="left">
 <h2>📚 文档        ⬇️ 快速开始使用麦麦 ⬇️</h2>
 </div>
@@ -52,6 +51,7 @@
 ### 部署方式
 
 -  📦 **Windows 一键傻瓜式部署**：请运行项目根目录中的 ```run.bat```，部署完成后请参照后续配置指南进行配置
+
 
 - [📦 Windows 手动部署指南 ](docs/manual_deploy_windows.md)
 
@@ -62,7 +62,9 @@
 - [🐳 Docker部署指南](docs/docker_deploy.md)
 
 
+
 ### 配置说明
+
 - [🎀 新手配置指南](docs/installation_cute.md) - 通俗易懂的配置教程，适合初次使用的猫娘
 - [⚙️ 标准配置指南](docs/installation_standard.md) - 简明专业的配置说明，适合有经验的用户
 
@@ -75,6 +77,7 @@
 ## 🎯 功能介绍
 
 ### 💬 聊天功能
+
 - 支持关键词检索主动发言：对消息的话题topic进行识别，如果检测到麦麦存储过的话题就会主动进行发言
 - 支持bot名字呼唤发言：检测到"麦麦"会主动发言，可配置
 - 支持多模型，多厂商自定义配置
@@ -83,30 +86,32 @@
 - 错别字和多条回复功能：麦麦可以随机生成错别字，会多条发送回复以及对消息进行reply
 
 ### 😊 表情包功能
+
 - 支持根据发言内容发送对应情绪的表情包
 - 会自动偷群友的表情包
 
 ### 📅 日程功能
+
 - 麦麦会自动生成一天的日程，实现更拟人的回复
 
 ### 🧠 记忆功能
+
 - 对聊天记录进行概括存储，在需要时调用，待完善
 
 ### 📚 知识库功能
+
 - 基于embedding模型的知识库，手动放入txt会自动识别，写完了，暂时禁用
 
 ### 👥 关系功能
+
 - 针对每个用户创建"关系"，可以对不同用户进行个性化回复，目前只有极其简单的好感度（WIP）
 - 针对每个群创建"群印象"，可以对不同群进行个性化回复（WIP）
-
-
 
 ## 开发计划TODO：LIST
 
 规划主线
 0.6.0：记忆系统更新
 0.7.0: 麦麦RunTime
-
 
 - 人格功能：WIP
 - 群氛围功能：WIP
@@ -127,7 +132,6 @@
 - 采用截断生成加快麦麦的反应速度
 - 改进发送消息的触发
 
-
 ## 设计理念
 
 - **千石可乐说：**
@@ -137,13 +141,14 @@
 - 如果人类真的需要一个AI来陪伴自己，并不是所有人都需要一个完美的，能解决所有问题的helpful assistant，而是一个会犯错的，拥有自己感知和想法的"生命形式"。
 - 代码会保持开源和开放，但个人希望MaiMbot的运行时数据保持封闭，尽量避免以显式命令来对其进行控制和调试.我认为一个你无法完全掌控的个体才更能让你感觉到它的自主性，而视其成为一个对话机器.
 
-
 ## 📌 注意事项
+
 SengokuCola纯编程外行，面向cursor编程，很多代码史一样多多包涵
 
 > ⚠️ **警告**：本应用生成内容来自人工智能模型，由 AI 生成，请仔细甄别，请勿用于违反法律的用途，AI生成内容不代表本人观点和立场。
 
 ## 致谢
+
 [nonebot2](https://github.com/nonebot/nonebot2): 跨平台 Python 异步聊天机器人框架  
 [NapCat](https://github.com/NapNeko/NapCatQQ): 现代化的基于 NTQQ 的 Bot 协议端实现  
 
@@ -155,6 +160,6 @@ SengokuCola纯编程外行，面向cursor编程，很多代码史一样多多包
   <img src="https://contrib.rocks/image?repo=SengokuCola/MaiMBot" />
 </a>
 
-
 ## Stargazers over time
+
 [![Stargazers over time](https://starchart.cc/SengokuCola/MaiMBot.svg?variant=adaptive)](https://starchart.cc/SengokuCola/MaiMBot)

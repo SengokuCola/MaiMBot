@@ -9,7 +9,10 @@ import networkx as nx
 from dotenv import load_dotenv
 from loguru import logger
 
-sys.path.append("C:/GitHub/MaiMBot")  # 添加项目根目录到 Python 路径
+# 添加项目根目录到 Python 路径
+root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(root_path)
+
 from src.common.database import Database  # 使用正确的导入语法
 
 # 加载.env.dev文件
@@ -162,12 +165,13 @@ class Memory_graph:
 def main():
     # 初始化数据库
     Database.initialize(
+        uri=os.getenv("MONGODB_URI"),
         host=os.getenv("MONGODB_HOST", "127.0.0.1"),
         port=int(os.getenv("MONGODB_PORT", "27017")),
         db_name=os.getenv("DATABASE_NAME", "MegBot"),
-        username=os.getenv("MONGODB_USERNAME", ""),
-        password=os.getenv("MONGODB_PASSWORD", ""),
-        auth_source=os.getenv("MONGODB_AUTH_SOURCE", "")
+        username=os.getenv("MONGODB_USERNAME"),
+        password=os.getenv("MONGODB_PASSWORD"),
+        auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
     )
 
     memory_graph = Memory_graph()
