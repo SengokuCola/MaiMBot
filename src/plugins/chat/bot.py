@@ -178,7 +178,7 @@ class ChatBot:
 
                 # 检查是否 <没有找到> emoji
                 if emoji_raw != None:
-                    emoji_path, discription = emoji_raw
+                    emoji_path, description = emoji_raw
 
                     emoji_cq = CQCode.create_emoji_cq(emoji_path)
 
@@ -194,7 +194,7 @@ class ChatBot:
                         raw_message=emoji_cq,
                         plain_text=emoji_cq,
                         processed_plain_text=emoji_cq,
-                        detailed_plain_text=discription,
+                        detailed_plain_text=description,
                         user_nickname=global_config.BOT_NICKNAME,
                         group_name=message.group_name,
                         time=bot_response_time,
