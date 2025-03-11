@@ -550,6 +550,9 @@ class Hippocampus:
         # 计算要检查的节点数量
         check_count = max(1, int(len(all_nodes) * percentage))
         # 随机选择节点
+        if len(all_nodes) <= 0:
+            logger.info("没有节点可以遗忘")
+            return
         nodes_to_check = random.sample(all_nodes, check_count)
         
         forgotten_nodes = []
