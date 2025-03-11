@@ -63,6 +63,7 @@ class BotConfig:
     
     enable_advance_output: bool = False  # 是否启用高级输出
     enable_kuuki_read: bool = True # 是否启用读空气功能
+    enable_auto_update_reply_willing_change: bool = True # 在收到消息后是否自动更新回复意愿
     
     mood_update_interval: float = 1.0 # 情绪更新间隔 单位秒
     mood_decay_rate: float = 0.95 # 情绪衰减率
@@ -307,6 +308,7 @@ class BotConfig:
             others_config = parent["others"]
             config.enable_advance_output = others_config.get("enable_advance_output", config.enable_advance_output)
             config.enable_kuuki_read = others_config.get("enable_kuuki_read", config.enable_kuuki_read)
+            config.enable_auto_update_reply_willing_change = others_config.get("enable_auto_update_reply_willing_change", config.enable_auto_update_reply_willing_change)
 
         # 版本表达式：>=1.0.0,<2.0.0
         # 允许字段：func: method, support: str, notice: str, necessary: bool

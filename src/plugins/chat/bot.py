@@ -220,7 +220,9 @@ class ChatBot:
             # 使用情绪管理器更新情绪
             self.mood_manager.update_mood_from_emotion(emotion[0], global_config.mood_intensity_factor)
         
-        # willing_manager.change_reply_willing_after_sent(event.group_id)
+        # 默认启用回复意愿更新 使用flag控制
+        if global_config.enable_auto_update_reply_willing_change:
+            willing_manager.change_reply_willing_after_sent(event.group_id)
 
 # 创建全局ChatBot实例
 chat_bot = ChatBot()

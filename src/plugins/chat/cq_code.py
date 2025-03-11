@@ -113,6 +113,10 @@ class CQCode:
             'Cache-Control': 'no-cache'
         }
         url = html.unescape(self.params['url'])
+
+        # 暂时性修复multimedia 网站的SSL问题 Todo:修复ssl问题
+        url.replace("https://multimedia.nt.qq.com.cn", "http://multimedia.nt.qq.com.cn")
+
         if not url.startswith(('http://', 'https://')):
             return None
 
