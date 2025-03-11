@@ -111,6 +111,38 @@ class ChatBot:
                 logger.info(f"[过滤词识别]消息中含有{word}，filtered")
                 return
 
+        # 识别表情包请求
+        text = message.processed_plain_text.strip()
+        emoji_keyword = await emoji_manager.extract_emoji_request(text)
+
+        if emoji_keyword is not None:
+            bot_user_info = UserInfo(
+                user_id=global_config.BOT_QQ, user_nickname=global_config.BOT_NICKNAME, platform=messageinfo.platform
+            )
+
+            # 尝试按关键词搜索表情包
+            emoji_raw = await emoji_manager.get_emoji_by_keyword(emoji_keyword)
+            if not emoji_raw:
+                # 如果找不到匹配的表情包，使用情感分析获取相关表情包
+                emoji_raw = await emoji_manager.get_emoji_for_text(emoji_keyword)
+
+            if emoji_raw:
+                emoji_path, description = emoji_raw
+                emoji_cq = image_path_to_base64(emoji_path)
+
+                message_segment = Seg(type="emoji", data=emoji_cq)
+                bot_message = MessageSending(
+                    message_id=f"emoji_{time.time()}",
+                    chat_stream=chat,
+                    bot_user_info=bot_user_info,
+                    message_segment=message_segment,
+                    reply=message,
+                    is_head=True,
+                    is_emoji=True,
+                )
+                message_manager.add_message(bot_message)
+                return
+
         # 正则表达式过滤
         for pattern in global_config.ban_msgs_regex:
             if re.search(pattern, message.raw_message):
