@@ -16,7 +16,10 @@ from loguru import logger
 import jieba
 
 # from chat.config import global_config
-sys.path.append("C:/GitHub/MaiMBot")  # 添加项目根目录到 Python 路径
+# 添加项目根目录到 Python 路径
+root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(root_path)
+
 from src.common.database import Database
 from src.plugins.memory_system.offline_llm import LLMModel
 
@@ -34,45 +37,6 @@ if env_path.exists():
 else:
     logger.warning(f"未找到环境变量文件: {env_path}")
     logger.info("将使用默认配置")
-
-class Database:
-    _instance = None
-    db = None
-    
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-    
-    def __init__(self):
-        if not Database.db:
-            Database.initialize(
-                host=os.getenv("MONGODB_HOST"),
-                port=int(os.getenv("MONGODB_PORT")),
-                db_name=os.getenv("DATABASE_NAME"),
-                username=os.getenv("MONGODB_USERNAME"),
-                password=os.getenv("MONGODB_PASSWORD"),
-                auth_source=os.getenv("MONGODB_AUTH_SOURCE")
-            )
-            
-    @classmethod
-    def initialize(cls, host, port, db_name, username=None, password=None, auth_source="admin"):
-        try:
-            if username and password:
-                uri = f"mongodb://{username}:{password}@{host}:{port}/{db_name}?authSource={auth_source}"
-            else:
-                uri = f"mongodb://{host}:{port}"
-                
-            client = pymongo.MongoClient(uri)
-            cls.db = client[db_name]
-            # 测试连接
-            client.server_info()
-            logger.success("MongoDB连接成功!")
-            
-        except Exception as e:
-            logger.error(f"初始化MongoDB失败: {str(e)}")
-            raise
 
 def calculate_information_content(text):
     """计算文本的信息量（熵）"""
@@ -202,7 +166,7 @@ class Memory_graph:
         # 返回所有节点对应的 Memory_dot 对象
         return [self.get_dot(node) for node in self.G.nodes()]
 
-# 海马体 
+# 海马体
 class Hippocampus:
     def __init__(self, memory_graph: Memory_graph):
         self.memory_graph = memory_graph
@@ -941,59 +905,67 @@ def visualize_graph_lite(memory_graph: Memory_graph, color_by_memory: bool = Fal
 async def main():
     # 初始化数据库
     logger.info("正在初始化数据库连接...")
-    db = Database.get_instance()
+    Database.initialize(
+        uri=os.getenv("MONGODB_URI"),
+        host=os.getenv("MONGODB_HOST", "127.0.0.1"),
+        port=int(os.getenv("MONGODB_PORT", "27017")),
+        db_name=os.getenv("DATABASE_NAME", "MegBot"),
+        username=os.getenv("MONGODB_USERNAME"),
+        password=os.getenv("MONGODB_PASSWORD"),
+        auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
+    )
     start_time = time.time()
-    
+
     test_pare = {'do_build_memory':False,'do_forget_topic':False,'do_visualize_graph':True,'do_query':False,'do_merge_memory':False}
-    
+
     # 创建记忆图
     memory_graph = Memory_graph()
-    
+
     # 创建海马体
     hippocampus = Hippocampus(memory_graph)
-    
+
     # 从数据库同步数据
     hippocampus.sync_memory_from_db()
-    
+
     end_time = time.time()
     logger.info(f"\033[32m[加载海马体耗时: {end_time - start_time:.2f} 秒]\033[0m")
-    
+
     # 构建记忆
     if test_pare['do_build_memory']:
         logger.info("开始构建记忆...")
         chat_size = 20
         await hippocampus.operation_build_memory(chat_size=chat_size)
-        
+
         end_time = time.time()
         logger.info(f"\033[32m[构建记忆耗时: {end_time - start_time:.2f} 秒,chat_size={chat_size},chat_count = 16]\033[0m")
-        
+
     if test_pare['do_forget_topic']:
         logger.info("开始遗忘记忆...")
         await hippocampus.operation_forget_topic(percentage=0.1)
-        
+
         end_time = time.time()
         logger.info(f"\033[32m[遗忘记忆耗时: {end_time - start_time:.2f} 秒]\033[0m")
-        
+
     if test_pare['do_merge_memory']:
         logger.info("开始合并记忆...")
         await hippocampus.operation_merge_memory(percentage=0.1)
-        
+
         end_time = time.time()
         logger.info(f"\033[32m[合并记忆耗时: {end_time - start_time:.2f} 秒]\033[0m")
-    
+
     if test_pare['do_visualize_graph']:
         # 展示优化后的图形
         logger.info("生成记忆图谱可视化...")
         print("\n生成优化后的记忆图谱：")
         visualize_graph_lite(memory_graph)
-    
+
     if test_pare['do_query']:
         # 交互式查询
         while True:
             query = input("\n请输入新的查询概念（输入'退出'以结束）：")
             if query.lower() == '退出':
                 break
-            
+
             items_list = memory_graph.get_related_item(query)
             if items_list:
                 first_layer, second_layer = items_list
@@ -1008,9 +980,6 @@ async def main():
             else:
                 print("未找到相关记忆。")
 
-
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-
-    

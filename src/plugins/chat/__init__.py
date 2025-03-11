@@ -31,6 +31,7 @@ driver = get_driver()
 config = driver.config
 
 Database.initialize(
+    uri=config.MONGODB_URI,
     host=config.MONGODB_HOST,
     port=int(config.MONGODB_PORT),
     db_name=config.DATABASE_NAME,

@@ -1,8 +1,9 @@
 # 🔧 配置指南 喵~
 
-## 👋 你好呀！
+## 👋 你好呀
 
 让咱来告诉你我们要做什么喵：
+
 1. 我们要一起设置一个可爱的AI机器人
 2. 这个机器人可以在QQ上陪你聊天玩耍哦
 3. 需要设置两个文件才能让机器人工作呢
@@ -10,16 +11,19 @@
 ## 📝 需要设置的文件喵
 
 要设置这两个文件才能让机器人跑起来哦：
+
 1. `.env.prod` - 这个文件告诉机器人要用哪些AI服务呢
 2. `bot_config.toml` - 这个文件教机器人怎么和你聊天喵
 
 ## 🔑 密钥和域名的对应关系
 
 想象一下，你要进入一个游乐园，需要：
+
 1. 知道游乐园的地址（这就是域名 base_url）
 2. 有入场的门票（这就是密钥 key）
 
 在 `.env.prod` 文件里，我们定义了三个游乐园的地址和门票喵：
+
 ```ini
 # 硅基流动游乐园
 SILICONFLOW_KEY=your_key        # 硅基流动的门票
@@ -35,6 +39,7 @@ CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1  # ChatAnyWhere的地�
 ```
 
 然后在 `bot_config.toml` 里，机器人会用这些门票和地址去游乐园玩耍：
+
 ```toml
 [model.llm_reasoning]
 name = "Pro/deepseek-ai/DeepSeek-R1"
@@ -47,9 +52,10 @@ base_url = "SILICONFLOW_BASE_URL"  # 还是去硅基流动游乐园
 key = "SILICONFLOW_KEY"            # 用同一张门票就可以啦
 ```
 
-### 🎪 举个例子喵：
+### 🎪 举个例子喵
 
 如果你想用DeepSeek官方的服务，就要这样改：
+
 ```toml
 [model.llm_reasoning]
 name = "deepseek-reasoner"       # 改成对应的模型名称，这里为DeepseekR1
@@ -62,7 +68,8 @@ base_url = "DEEP_SEEK_BASE_URL"  # 也去DeepSeek游乐园
 key = "DEEP_SEEK_KEY"            # 用同一张DeepSeek门票
 ```
 
-### 🎯 简单来说：
+### 🎯 简单来说
+
 - `.env.prod` 文件就像是你的票夹，存放着各个游乐园的门票和地址
 - `bot_config.toml` 就是告诉机器人：用哪张票去哪个游乐园玩
 - 所有模型都可以用同一个游乐园的票，也可以去不同的游乐园玩耍
@@ -88,19 +95,25 @@ CHAT_ANY_WHERE_KEY=your_key
 CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1
 
 # 如果你不知道这是什么，那么下面这些不用改，保持原样就好啦
-HOST=127.0.0.1  # 如果使用Docker部署，需要改成0.0.0.0喵，不然听不见群友讲话了喵
+# 如果使用Docker部署，需要改成0.0.0.0喵，不然听不见群友讲话了喵
+HOST=127.0.0.1
 PORT=8080
 
 # 这些是数据库设置，一般也不用改呢
-MONGODB_HOST=127.0.0.1  # 如果使用Docker部署，需要改成数据库容器的名字喵，默认是mongodb喵
+# 如果使用Docker部署，需要把MONGODB_HOST改成数据库容器的名字喵，默认是mongodb喵
+MONGODB_HOST=127.0.0.1
 MONGODB_PORT=27017
 DATABASE_NAME=MegBot
-MONGODB_USERNAME = ""  # 如果数据库需要用户名，就在这里填写喵
-MONGODB_PASSWORD = ""  # 如果数据库需要密码，就在这里填写呢
-MONGODB_AUTH_SOURCE = ""  # 数据库认证源，一般不用改哦
+# 数据库认证信息，如果需要认证就取消注释并填写下面三行喵
+# MONGODB_USERNAME = ""
+# MONGODB_PASSWORD = ""
+# MONGODB_AUTH_SOURCE = ""
 
-# 插件设置喵
-PLUGINS=["src2.plugins.chat"]  # 这里是机器人的插件列表呢
+# 也可以使用URI连接数据库，取消注释填写在下面这行喵（URI的优先级比上面的高）
+# MONGODB_URI=mongodb://127.0.0.1:27017/MegBot
+
+# 这里是机器人的插件列表呢
+PLUGINS=["src2.plugins.chat"]
 ```
 
 ### 第二个文件：机器人配置 (bot_config.toml)
@@ -199,10 +212,12 @@ key = "SILICONFLOW_KEY"
    - `topic`: 负责理解对话主题的能力呢
 
 ## 🌟 小提示
+
 - 如果你刚开始使用，建议保持默认配置呢
 - 不同的模型有不同的特长，可以根据需要调整它们的使用比例哦
 
 ## 🌟 小贴士喵
+
 - 记得要好好保管密钥（key）哦，不要告诉别人呢
 - 配置文件要小心修改，改错了机器人可能就不能和你玩了喵
 - 如果想让机器人更聪明，可以调整 personality 里的设置呢
@@ -210,6 +225,7 @@ key = "SILICONFLOW_KEY"
 - QQ群号和QQ号都要用数字填写，不要加引号哦（除了机器人自己的QQ号）
 
 ## ⚠️ 注意事项
+
 - 这个机器人还在测试中呢，可能会有一些小问题喵
 - 如果不知道怎么改某个设置，就保持原样不要动它哦~
 - 记得要先有AI服务的密钥，不然机器人就不能和你说话了呢

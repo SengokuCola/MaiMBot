@@ -8,6 +8,7 @@ import jieba
 import networkx as nx
 
 from loguru import logger
+from nonebot import get_driver
 from ...common.database import Database  # 使用正确的导入语法
 from ..chat.config import global_config
 from ..chat.utils import (
@@ -17,7 +18,6 @@ from ..chat.utils import (
     text_to_vector,
 )
 from ..models.utils_model import LLM_request
-
 
 class Memory_graph:
     def __init__(self):
@@ -150,7 +150,7 @@ class Memory_graph:
         return None
 
 
-# 海马体 
+# 海马体
 class Hippocampus:
     def __init__(self, memory_graph: Memory_graph):
         self.memory_graph = memory_graph
@@ -881,15 +881,13 @@ def segment_text(text):
     seg_text = list(jieba.cut(text))
     return seg_text
 
-
-from nonebot import get_driver
-
 driver = get_driver()
 config = driver.config
 
 start_time = time.time()
 
 Database.initialize(
+    uri=config.MONGODB_URI,
     host=config.MONGODB_HOST,
     port=config.MONGODB_PORT,
     db_name=config.DATABASE_NAME,
