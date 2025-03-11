@@ -299,6 +299,23 @@ class LLM_request:
         # 复制一份参数，避免直接修改 self.params
         params_copy = await self._transform_parameters(self.params)
         if image_base64:
+             # 解码base64数据以检测图像格式
+            try:
+                image_data = base64.b64decode(image_base64)
+                with Image.open(io.BytesIO(image_data)) as img:
+                    img_format = img.format
+                    if img_format == 'JPEG':
+                        mime_type = 'image/jpeg'
+                    elif img_format == 'PNG':
+                        mime_type = 'image/png'
+                    elif img_format == 'GIF':
+                        mime_type = 'image/gif'
+                    else:
+                        mime_type = 'image/png'  # 默认类型
+            except Exception as e:
+                logger.warning(f"图像格式检测失败，使用默认MIME类型: {e}")
+                mime_type = 'image/jpeg'
+                
             payload = {
                 "model": self.model_name,
                 "messages": [
@@ -306,7 +323,9 @@ class LLM_request:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                            {"type": "image_url", "image_url": {
+                                "url": f"data:{mime_type};base64,{image_base64}"
+                            }}
                         ]
                     }
                 ],
