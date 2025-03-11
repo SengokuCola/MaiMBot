@@ -1,6 +1,7 @@
 import asyncio
 from loguru import logger
 from .config import global_config
+from datetime import datetime  # 用于获取当前时间
 
 
 class WillingManager:
@@ -84,6 +85,25 @@ class WillingManager:
         )
         if group_id in config.talk_frequency_down_groups:
             reply_probability = reply_probability / down_frequency_rate
+
+        # 【夜间模式】根据配置的时间段大幅降低回复意愿
+        if global_config.night_mode_enable:
+            current_hour = datetime.now().hour
+            start_hour = global_config.night_mode_start_hour
+            end_hour = global_config.night_mode_end_hour
+            
+            # 处理跨午夜的情况
+            is_night_time = False
+            if start_hour < end_hour:  # 例如：0点到7点
+                is_night_time = start_hour <= current_hour < end_hour
+            else:  # 例如：22点到8点(跨午夜)
+                is_night_time = current_hour >= start_hour or current_hour < end_hour
+                
+            if is_night_time:
+                logger.debug(f"夜间模式生效（{current_hour}时）")
+                # 双重抑制：既降低当前意愿又减少回复概率
+                current_willing *= global_config.night_mode_willing_factor  # 意愿衰减
+                reply_probability *= global_config.night_mode_probability_factor  # 概率衰减
 
         reply_probability = min(reply_probability, 1)
 

@@ -96,6 +96,13 @@ class BotConfig:
     memory_ban_words: list = field(
         default_factory=lambda: ["表情包", "图片", "回复", "聊天记录"]
     )  # 添加新的配置项默认值
+    
+    # 夜间模式配置项
+    night_mode_enable: bool = True  # 是否启用夜间模式
+    night_mode_start_hour: int = 0  # 夜间模式开始小时
+    night_mode_end_hour: int = 7  # 夜间模式结束小时
+    night_mode_willing_factor: float = 0.3  # 夜间模式意愿衰减因子
+    night_mode_probability_factor: float = 0.2  # 夜间模式概率衰减因子
 
     @staticmethod
     def get_config_dir() -> str:
@@ -325,6 +332,15 @@ class BotConfig:
             others_config = parent["others"]
             config.enable_advance_output = others_config.get("enable_advance_output", config.enable_advance_output)
             config.enable_kuuki_read = others_config.get("enable_kuuki_read", config.enable_kuuki_read)
+            
+            # 在版本 >= 0.0.6 时才处理夜间模式配置项
+            if config.INNER_VERSION in SpecifierSet(">=0.0.6") and "night_mode" in others_config:
+                night_config = others_config["night_mode"]
+                config.night_mode_enable = night_config.get("enable", config.night_mode_enable)
+                config.night_mode_start_hour = night_config.get("start_hour", config.night_mode_start_hour)
+                config.night_mode_end_hour = night_config.get("end_hour", config.night_mode_end_hour)
+                config.night_mode_willing_factor = night_config.get("willing_factor", config.night_mode_willing_factor)
+                config.night_mode_probability_factor = night_config.get("probability_factor", config.night_mode_probability_factor)
 
         # 版本表达式：>=1.0.0,<2.0.0
         # 允许字段：func: method, support: str, notice: str, necessary: bool

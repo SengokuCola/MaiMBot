@@ -101,6 +101,15 @@ word_replace_rate=0.006 # 整词替换概率
 enable_advance_output = true # 是否启用高级输出
 enable_kuuki_read = true # 是否启用读空气功能
 
+[others.night_mode] # 夜间模式配置
+enable = true # 是否启用夜间模式
+start_hour = 0 # 夜间模式开始时间（小时，0-23）
+end_hour = 7 # 夜间模式结束时间（小时，0-23）
+willing_factor = 0.3 # 意愿衰减因子（0-1之间，越小抑制越强）
+probability_factor = 0.2 # 概率衰减因子（0-1之间，越小抑制越强）
+# 注：如需设置跨午夜的时间段（如22点到次日8点），
+# 请设置 start_hour = 22, end_hour = 8
+
 [groups]
 talk_allowed = [
     123,
