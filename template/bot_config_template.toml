@@ -1,5 +1,5 @@
 [inner]
-version = "0.0.3"
+version = "0.0.3.1"
 
 [bot]
 qq = 123
@@ -77,6 +77,7 @@ word_replace_rate=0.02 # 整词替换概率
 [others]
 enable_advance_output = true # 是否启用高级输出
 enable_kuuki_read = true # 是否启用读空气功能
+enable_auto_update_reply_willing_change = true # 在收到消息后是否自动更新回复意愿
 
 [groups]
 talk_allowed = [
