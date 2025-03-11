@@ -110,6 +110,57 @@ python3 bot.py
 
 ---
 
+### 7️⃣ **使用systemctl管理maimbot**
+
+使用以下命令添加服务文件：
+
+```bash
+sudo nano /etc/systemd/system/maimbot.service
+```
+
+输入以下内容：
+
+`<maimbot_directory>`：你的maimbot目录
+`<venv_directory>`：你的venv环境（就是上文创建环境后，执行的代码`source maimbot/bin/activate`中source后面的路径的绝对路径）
+
+```ini
+[Unit]
+Description=MaiMbot 麦麦
+After=network.target mongod.service
+
+[Service]
+Type=simple
+WorkingDirectory=<maimbot_directory>
+ExecStart=<venv_directory>/python3 bot.py
+ExecStop=/bin/kill -2 $MAINPID
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+输入以下命令重新加载systemd：
+
+```bash
+sudo systemctl daemon-reload
+```
+
+启动并设置开机自启：
+
+```bash
+sudo systemctl start maimbot
+sudo systemctl enable maimbot
+```
+
+输入以下命令查看日志：
+
+```bash
+sudo journalctl -xeu maimbot
+```
+
+---
+
 ## **其他组件(可选)**
 
 - 直接运行 knowledge.py生成知识库
