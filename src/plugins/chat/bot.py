@@ -56,6 +56,7 @@ class ChatBot:
             group_name = None
 
         # 白名单设定由nontbot侧完成
+        # 消息过滤，涉及到config有待更新
         if event.group_id:
             if event.group_id not in global_config.talk_allowed_groups:
                 return

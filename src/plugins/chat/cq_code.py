@@ -231,7 +231,8 @@ class CQCode:
                                     group_info=group_info,
                                 )
                                 content_seg = Seg(
-                                    type="seglist", data=message_obj.message_segment                                )
+                                    type="seglist", data=[message_obj.message_segment]                             
+                                )
                             else:
                                 content_seg = Seg(type="text", data="[空消息]")
                 else:
@@ -256,7 +257,7 @@ class CQCode:
                             group_info=group_info,
                         )
                         content_seg = Seg(
-                            type="seglist", data=message_obj.message_segment
+                            type="seglist", data=[message_obj.message_segment]
                         )
                     else:
                         content_seg = Seg(type="text", data="[空消息]")
@@ -281,11 +282,12 @@ class CQCode:
         if self.reply_message.sender.user_id:
             
             message_obj = MessageRecvCQ(
-                user_info=UserInfo(user_id=self.reply_message.sender.user_id,user_nickname=self.reply_message.sender.get("nickname",None)),
+                user_info=UserInfo(user_id=self.reply_message.sender.user_id,user_nickname=self.reply_message.sender.nickname),
                 message_id=self.reply_message.message_id,
                 raw_message=str(self.reply_message.message),
                 group_info=GroupInfo(group_id=self.reply_message.group_id),
             )
+            
 
             segments = []
             if message_obj.message_info.user_info.user_id == global_config.BOT_QQ:
@@ -302,7 +304,7 @@ class CQCode:
                     )
                 )
 
-            segments.append(Seg(type="seglist", data=message_obj.message_segment))
+            segments.append(Seg(type="seglist", data=[message_obj.message_segment]))
             segments.append(Seg(type="text", data="]"))
             return segments
         else:

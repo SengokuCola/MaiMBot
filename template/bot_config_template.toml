@@ -100,6 +100,7 @@ word_replace_rate=0.006 # 整词替换概率
 [others]
 enable_advance_output = true # 是否启用高级输出
 enable_kuuki_read = true # 是否启用读空气功能
+enable_debug_output = false # 是否启用调试输出
 
 [groups]
 talk_allowed = [

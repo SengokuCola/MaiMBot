@@ -1,4 +1,5 @@
 import os
+import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -67,6 +68,7 @@ class BotConfig:
 
     enable_advance_output: bool = False  # 是否启用高级输出
     enable_kuuki_read: bool = True  # 是否启用读空气功能
+    enable_debug_output: bool = False  # 是否启用调试输出
 
     mood_update_interval: float = 1.0  # 情绪更新间隔 单位秒
     mood_decay_rate: float = 0.95  # 情绪衰减率
@@ -325,6 +327,7 @@ class BotConfig:
             others_config = parent["others"]
             config.enable_advance_output = others_config.get("enable_advance_output", config.enable_advance_output)
             config.enable_kuuki_read = others_config.get("enable_kuuki_read", config.enable_kuuki_read)
+            config.enable_debug_output = others_config.get("enable_debug_output", config.enable_debug_output)
 
         # 版本表达式：>=1.0.0,<2.0.0
         # 允许字段：func: method, support: str, notice: str, necessary: bool
@@ -419,4 +422,8 @@ global_config = BotConfig.load_config(config_path=bot_config_path)
 
 if not global_config.enable_advance_output:
     logger.remove()
-    pass
+    
+# 调试输出功能
+if global_config.enable_debug_output:
+    logger.remove()
+    logger.add(sys.stdout, level="DEBUG")

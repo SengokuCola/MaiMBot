@@ -51,15 +51,15 @@ def init_env():
         with open(".env", "w") as f:
             f.write("ENVIRONMENT=prod")
 
-        # 检测.env.prod文件是否存在
-        if not os.path.exists(".env.prod"):
-            logger.error("检测到.env.prod文件不存在")
-            shutil.copy("template.env", "./.env.prod")
+    # 检测.env.prod文件是否存在
+    if not os.path.exists(".env.prod"):
+        logger.error("检测到.env.prod文件不存在")
+        shutil.copy("template.env", "./.env.prod")
 
     # 检测.env.dev文件是否存在，不存在的话直接复制生产环境配置
     if not os.path.exists(".env.dev"):
         logger.error("检测到.env.dev文件不存在")
-        shutil.copy(".env.prod", "./.env.dev")
+        shutil.copy("template.env", "./.env.dev")
 
     # 首先加载基础环境变量.env
     if os.path.exists(".env"):
