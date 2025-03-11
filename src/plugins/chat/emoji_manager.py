@@ -33,7 +33,7 @@ class EmojiManager:
         self.db = Database.get_instance()
         self._scan_task = None
         self.vlm = LLM_request(model=global_config.vlm, temperature=0.3, max_tokens=1000)
-        self.llm_emotion_judge = LLM_request(model=global_config.llm_normal_minor, max_tokens=60,
+        self.llm_emotion_judge = LLM_request(model=global_config.llm_emotion_judge, max_tokens=60,
                                              temperature=0.8)  # 更高的温度，更少的token（后续可以根据情绪来调整温度）
 
 
@@ -51,8 +51,8 @@ class EmojiManager:
                 self._initialized = True
                 # 启动时执行一次完整性检查
                 self.check_emoji_file_integrity()
-            except Exception as e:
-                logger.exception(f"初始化表情管理器失败")
+            except Exception:
+                logger.exception("初始化表情管理器失败")
 
     def _ensure_db(self):
         """确保数据库已初始化"""
@@ -87,8 +87,8 @@ class EmojiManager:
                 {'_id': emoji_id},
                 {'$inc': {'usage_count': 1}}
             )
-        except Exception as e:
-            logger.exception(f"记录表情使用失败")
+        except Exception:
+            logger.exception("记录表情使用失败")
 
     async def get_emoji_for_text(self, text: str) -> Optional[str]:
         """根据文本内容获取相关表情包
@@ -117,7 +117,7 @@ class EmojiManager:
 
             try:
                 # 获取所有表情包
-                all_emojis = list(self.db.db.emoji.find({}, {'_id': 1, 'path': 1, 'embedding': 1, 'discription': 1}))
+                all_emojis = list(self.db.db.emoji.find({}, {'_id': 1, 'path': 1, 'embedding': 1, 'description': 1}))
 
                 if not all_emojis:
                     logger.warning("数据库中没有任何表情包")
@@ -160,9 +160,9 @@ class EmojiManager:
                         {'$inc': {'usage_count': 1}}
                     )
                     logger.success(
-                        f"找到匹配的表情包: {selected_emoji.get('discription', '无描述')} (相似度: {similarity:.4f})")
+                        f"找到匹配的表情包: {selected_emoji.get('description', '无描述')} (相似度: {similarity:.4f})")
                     # 稍微改一下文本描述，不然容易产生幻觉，描述已经包含 表情包 了
-                    return selected_emoji['path'], "[ %s ]" % selected_emoji.get('discription', '无描述')
+                    return selected_emoji['path'], "[ %s ]" % selected_emoji.get('description', '无描述')
 
             except Exception as search_error:
                 logger.error(f"搜索表情包失败: {str(search_error)}")
@@ -174,7 +174,7 @@ class EmojiManager:
             logger.error(f"获取表情包失败: {str(e)}")
             return None
 
-    async def _get_emoji_discription(self, image_base64: str) -> str:
+    async def _get_emoji_description(self, image_base64: str) -> str:
         """获取表情包的标签"""
         try:
             prompt = '这是一个表情包，使用中文简洁的描述一下表情包的内容和表情包所表达的情感'
@@ -236,36 +236,36 @@ class EmojiManager:
                     continue
 
                 # 获取表情包的描述
-                discription = await self._get_emoji_discription(image_base64)
+                description = await self._get_emoji_description(image_base64)
                 if global_config.EMOJI_CHECK:
                     check = await self._check_emoji(image_base64)
                     if '是' not in check:
                         os.remove(image_path)
-                        logger.info(f"描述: {discription}")
+                        logger.info(f"描述: {description}")
                         logger.info(f"其不满足过滤规则，被剔除 {check}")
                         continue
                     logger.info(f"check通过 {check}")
                 
-                if discription is not None:
-                    embedding = await get_embedding(discription)
+                if description is not None:
+                    embedding = await get_embedding(description)
                     # 准备数据库记录
                     emoji_record = {
                         'filename': filename,
                         'path': image_path,
                         'embedding': embedding,
-                        'discription': discription,
+                        'description': description,
                         'timestamp': int(time.time())
                     }
 
                     # 保存到数据库
                     self.db.db['emoji'].insert_one(emoji_record)
                     logger.success(f"注册新表情包: {filename}")
-                    logger.info(f"描述: {discription}")
+                    logger.info(f"描述: {description}")
                 else:
                     logger.warning(f"跳过表情包: {filename}")
 
-        except Exception as e:
-            logger.exception(f"扫描表情包失败")
+        except Exception:
+            logger.exception("扫描表情包失败")
 
     async def _periodic_scan(self, interval_MINS: int = 10):
         """定期扫描新表情包"""

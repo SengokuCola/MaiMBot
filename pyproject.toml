@@ -1,23 +1,51 @@
 [project]
-name = "Megbot"
+name = "MaiMaiBot"
 version = "0.1.0"
-description = "New Bot Project"
+description = "MaiMaiBot"
 
 [tool.nonebot]
 plugins = ["src.plugins.chat"]
-plugin_dirs = ["src/plugins"] 
+plugin_dirs = ["src/plugins"]
 
 [tool.ruff]
-# 设置 Python 版本
-target-version = "py39"
+
+include = ["*.py"]
+
+# 行长度设置
+line-length = 120
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+unfixable = []
+
+# 如果一个变量的名称以下划线开头，即使它未被使用，也不应该被视为错误或警告。
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # 启用的规则
 select = [
-    "E",  # pycodestyle 错误
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
+    "E", # pycodestyle 错误
+    "F", # pyflakes
+    "B", # flake8-bugbear
 ]
 
-# 行长度设置
-line-length = 88
+ignore = ["E711"]
+
+[tool.ruff.format]
+docstring-code-format = true
+indent-style = "space"
+
+
+# 使用双引号表示字符串
+quote-style = "double"
+
+# 尊重魔法尾随逗号
+# 例如：
+# items = [
+#     "apple",
+#     "banana",
+#     "cherry",
+# ]
+skip-magic-trailing-comma = false
+
+# 自动检测合适的换行符
+line-ending = "auto"

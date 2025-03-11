@@ -45,6 +45,6 @@ class MessageStorage:
 
             self.db.db.messages.insert_one(message_data)
         except Exception:
-            logger.exception(f"存储消息失败")
+            logger.exception("存储消息失败")
 
 # 如果需要其他存储相关的函数，可以在这里添加

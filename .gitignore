@@ -193,9 +193,8 @@ cython_debug/
 # jieba
 jieba.cache
 
-
-# vscode
-/.vscode
+# .vscode
+!.vscode/settings.json
 
 # direnv
 /.direnv

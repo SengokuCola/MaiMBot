@@ -61,7 +61,7 @@ class Message_Sender:
                 auto_escape=auto_escape
             )
             logger.debug(f"发送消息{message}成功")
-        except Exception as e:
+        except Exception:
             logger.exception(f"发送消息{message}失败")
 
 
@@ -120,7 +120,7 @@ class MessageContainer:
                 return True
             return False
         except Exception:
-            logger.exception(f"移除消息时发生错误")
+            logger.exception("移除消息时发生错误")
             return False
 
     def has_messages(self) -> bool:
@@ -214,7 +214,7 @@ class MessageManager:
                         if not container.remove_message(msg):
                             logger.warning("尝试删除不存在的消息")
                     except Exception:
-                        logger.exception(f"处理超时消息时发生错误")
+                        logger.exception("处理超时消息时发生错误")
                         continue
 
     async def start_processor(self):

@@ -30,7 +30,7 @@
 
 在创建虚拟环境之前，请确保你的电脑上安装了Python 3.9及以上版本。如果没有，可以按以下步骤安装：
 
-1. 访问Python官网下载页面：https://www.python.org/downloads/release/python-3913/
+1. 访问Python官网下载页面: https://www.python.org/downloads/release/python-3913/
 2. 下载Windows安装程序 (64-bit): `python-3.9.13-amd64.exe`
 3. 运行安装程序，并确保勾选"Add Python 3.9 to PATH"选项
 4. 点击"Install Now"开始安装
@@ -79,11 +79,11 @@ pip install -r requirements.txt
 
 ### 3️⃣ **配置NapCat，让麦麦bot与qq取得联系**
 - 安装并登录NapCat（用你的qq小号）
-- 添加反向WS：`ws://127.0.0.1:8080/onebot/v11/ws`
+- 添加反向WS: `ws://127.0.0.1:8080/onebot/v11/ws`
 
 ### 4️⃣ **配置文件设置，让麦麦Bot正常工作**
-- 修改环境配置文件：`.env.prod`
-- 修改机器人配置文件：`bot_config.toml`
+- 修改环境配置文件: `.env.prod`
+- 修改机器人配置文件: `bot_config.toml`
 
 ### 5️⃣ **启动麦麦机器人**
 - 打开命令行，cd到对应路径

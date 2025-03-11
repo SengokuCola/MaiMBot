@@ -87,7 +87,7 @@ class ReasoningGUI:
                 self.db = Database.get_instance().db
                 logger.success("数据库初始化成功")
             except Exception:
-                logger.exception(f"数据库初始化失败")
+                logger.exception("数据库初始化失败")
                 sys.exit(1)
 
         # 存储群组数据
@@ -342,7 +342,7 @@ class ReasoningGUI:
                             'group_id': self.selected_group_id
                         })
             except Exception:
-                logger.exception(f"自动更新出错")
+                logger.exception("自动更新出错")
 
             # 每5秒更新一次
             time.sleep(5)

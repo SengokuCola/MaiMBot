@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import tomli
 from loguru import logger
@@ -12,10 +12,12 @@ from packaging.specifiers import SpecifierSet, InvalidSpecifier
 @dataclass
 class BotConfig:
     """机器人配置类"""
+
     INNER_VERSION: Version = None
 
     BOT_QQ: Optional[int] = 1
     BOT_NICKNAME: Optional[str] = None
+    BOT_ALIAS_NAMES: List[str] = field(default_factory=list)  # 别名，可以通过这个叫它
 
     # 消息处理相关配置
     MIN_TEXT_LENGTH: int = 2  # 最小处理文本长度
@@ -43,6 +45,7 @@ class BotConfig:
     EMOJI_CHECK_PROMPT: str = "符合公序良俗"  # 表情包过滤要求
 
     ban_words = set()
+    ban_msgs_regex = set()
 
     max_response_length: int = 1024  # 最大回复长度
 
@@ -81,23 +84,25 @@ class BotConfig:
     PROMPT_PERSONALITY = [
         "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",
         "是一个女大学生，你有黑色头发，你会刷小红书",
-        "是一个女大学生，你会刷b站，对ACG文化感兴趣"
+        "是一个女大学生，你会刷b站，对ACG文化感兴趣",
     ]
 
-    PROMPT_SCHEDULE_GEN="一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
-    
-    PERSONALITY_1: float = 0.6 # 第一种人格概率
-    PERSONALITY_2: float = 0.3 # 第二种人格概率
-    PERSONALITY_3: float = 0.1 # 第三种人格概率
-    
-    memory_ban_words: list = field(default_factory=lambda: ['表情包', '图片', '回复', '聊天记录'])  # 添加新的配置项默认值
-    
+    PROMPT_SCHEDULE_GEN = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
+
+    PERSONALITY_1: float = 0.6  # 第一种人格概率
+    PERSONALITY_2: float = 0.3  # 第二种人格概率
+    PERSONALITY_3: float = 0.1  # 第三种人格概率
+
+    memory_ban_words: list = field(
+        default_factory=lambda: ["表情包", "图片", "回复", "聊天记录"]
+    )  # 添加新的配置项默认值
+
     @staticmethod
     def get_config_dir() -> str:
         """获取配置文件目录"""
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        root_dir = os.path.abspath(os.path.join(current_dir, '..', '..', '..'))
-        config_dir = os.path.join(root_dir, 'config')
+        root_dir = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+        config_dir = os.path.join(root_dir, "config")
         if not os.path.exists(config_dir):
             os.makedirs(config_dir)
         return config_dir
@@ -108,35 +113,32 @@ class BotConfig:
         Args:
             value[str]: 版本表达式(字符串)
         Returns:
-            SpecifierSet 
+            SpecifierSet
         """
 
         try:
             converted = SpecifierSet(value)
-        except InvalidSpecifier as e:
-            logger.error(
-                f"{value} 分类使用了错误的版本约束表达式\n",
-                "请阅读 https://semver.org/lang/zh-CN/ 修改代码"
-            )
+        except InvalidSpecifier:
+            logger.error(f"{value} 分类使用了错误的版本约束表达式\n", "请阅读 https://semver.org/lang/zh-CN/ 修改代码")
             exit(1)
 
         return converted
 
     @classmethod
     def get_config_version(cls, toml: dict) -> Version:
-        """提取配置文件的 SpecifierSet 版本数据 
+        """提取配置文件的 SpecifierSet 版本数据
         Args:
             toml[dict]: 输入的配置文件字典
         Returns:
-            Version 
+            Version
         """
 
-        if 'inner' in toml:
+        if "inner" in toml:
             try:
                 config_version: str = toml["inner"]["version"]
             except KeyError as e:
-                logger.error(f"配置文件中 inner 段 不存在, 这是错误的配置文件")
-                raise KeyError(f"配置文件中 inner 段 不存在 {e}, 这是错误的配置文件")
+                logger.error("配置文件中 inner 段 不存在, 这是错误的配置文件")
+                raise KeyError(f"配置文件中 inner 段 不存在 {e}, 这是错误的配置文件") from e
         else:
             toml["inner"] = {"version": "0.0.0"}
             config_version = toml["inner"]["version"]
@@ -149,7 +151,7 @@ class BotConfig:
                 "请阅读 https://semver.org/lang/zh-CN/ 修改配置，并参考本项目指定的模板进行修改\n"
                 "本项目在不同的版本下有不同的模板，请注意识别"
             )
-            raise InvalidVersion("配置文件中 inner段 的 version 键是错误的版本描述\n")
+            raise InvalidVersion("配置文件中 inner段 的 version 键是错误的版本描述\n") from e
 
         return ver
 
@@ -159,26 +161,26 @@ class BotConfig:
         config = cls()
 
         def personality(parent: dict):
-            personality_config = parent['personality']
-            personality = personality_config.get('prompt_personality')
+            personality_config = parent["personality"]
+            personality = personality_config.get("prompt_personality")
             if len(personality) >= 2:
                 logger.debug(f"载入自定义人格:{personality}")
-                config.PROMPT_PERSONALITY = personality_config.get('prompt_personality', config.PROMPT_PERSONALITY)
+                config.PROMPT_PERSONALITY = personality_config.get("prompt_personality", config.PROMPT_PERSONALITY)
             logger.info(f"载入自定义日程prompt:{personality_config.get('prompt_schedule', config.PROMPT_SCHEDULE_GEN)}")
-            config.PROMPT_SCHEDULE_GEN = personality_config.get('prompt_schedule', config.PROMPT_SCHEDULE_GEN)
+            config.PROMPT_SCHEDULE_GEN = personality_config.get("prompt_schedule", config.PROMPT_SCHEDULE_GEN)
 
             if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
-                config.PERSONALITY_1 = personality_config.get('personality_1_probability', config.PERSONALITY_1)
-                config.PERSONALITY_2 = personality_config.get('personality_2_probability', config.PERSONALITY_2)
-                config.PERSONALITY_3 = personality_config.get('personality_3_probability', config.PERSONALITY_3)
+                config.PERSONALITY_1 = personality_config.get("personality_1_probability", config.PERSONALITY_1)
+                config.PERSONALITY_2 = personality_config.get("personality_2_probability", config.PERSONALITY_2)
+                config.PERSONALITY_3 = personality_config.get("personality_3_probability", config.PERSONALITY_3)
 
         def emoji(parent: dict):
             emoji_config = parent["emoji"]
             config.EMOJI_CHECK_INTERVAL = emoji_config.get("check_interval", config.EMOJI_CHECK_INTERVAL)
             config.EMOJI_REGISTER_INTERVAL = emoji_config.get("register_interval", config.EMOJI_REGISTER_INTERVAL)
-            config.EMOJI_CHECK_PROMPT = emoji_config.get('check_prompt', config.EMOJI_CHECK_PROMPT)
-            config.EMOJI_SAVE = emoji_config.get('auto_save', config.EMOJI_SAVE)
-            config.EMOJI_CHECK = emoji_config.get('enable_check', config.EMOJI_CHECK)
+            config.EMOJI_CHECK_PROMPT = emoji_config.get("check_prompt", config.EMOJI_CHECK_PROMPT)
+            config.EMOJI_SAVE = emoji_config.get("auto_save", config.EMOJI_SAVE)
+            config.EMOJI_CHECK = emoji_config.get("enable_check", config.EMOJI_CHECK)
 
         def cq_code(parent: dict):
             cq_code_config = parent["cq_code"]
@@ -191,12 +193,16 @@ class BotConfig:
             config.BOT_QQ = int(bot_qq)
             config.BOT_NICKNAME = bot_config.get("nickname", config.BOT_NICKNAME)
 
+            if config.INNER_VERSION in SpecifierSet(">=0.0.5"):
+                config.BOT_ALIAS_NAMES = bot_config.get("alias_names", config.BOT_ALIAS_NAMES)
+
         def response(parent: dict):
             response_config = parent["response"]
             config.MODEL_R1_PROBABILITY = response_config.get("model_r1_probability", config.MODEL_R1_PROBABILITY)
             config.MODEL_V3_PROBABILITY = response_config.get("model_v3_probability", config.MODEL_V3_PROBABILITY)
-            config.MODEL_R1_DISTILL_PROBABILITY = response_config.get("model_r1_distill_probability",
-                                                                      config.MODEL_R1_DISTILL_PROBABILITY)
+            config.MODEL_R1_DISTILL_PROBABILITY = response_config.get(
+                "model_r1_distill_probability", config.MODEL_R1_DISTILL_PROBABILITY
+            )
             config.max_response_length = response_config.get("max_response_length", config.max_response_length)
 
         def model(parent: dict):
@@ -213,7 +219,7 @@ class BotConfig:
                 "llm_emotion_judge",
                 "vlm",
                 "embedding",
-                "moderation"
+                "moderation",
             ]
 
             for item in config_list:
@@ -222,13 +228,7 @@ class BotConfig:
 
                     # base_url 的例子： SILICONFLOW_BASE_URL
                     # key 的例子： SILICONFLOW_KEY
-                    cfg_target = {
-                        "name": "",
-                        "base_url": "",
-                        "key": "",
-                        "pri_in": 0,
-                        "pri_out": 0
-                    }
+                    cfg_target = {"name": "", "base_url": "", "key": "", "pri_in": 0, "pri_out": 0}
 
                     if config.INNER_VERSION in SpecifierSet("<=0.0.0"):
                         cfg_target = cfg_item
@@ -247,7 +247,7 @@ class BotConfig:
                                     cfg_target[i] = cfg_item[i]
                                 except KeyError as e:
                                     logger.error(f"{item} 中的必要字段不存在，请检查")
-                                    raise KeyError(f"{item} 中的必要字段 {e} 不存在，请检查")
+                                    raise KeyError(f"{item} 中的必要字段 {e} 不存在，请检查") from e
 
                         provider = cfg_item.get("provider")
                         if provider is None:
@@ -272,17 +272,22 @@ class BotConfig:
 
             if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
                 config.thinking_timeout = msg_config.get("thinking_timeout", config.thinking_timeout)
-                config.response_willing_amplifier = msg_config.get("response_willing_amplifier",
-                                                                   config.response_willing_amplifier)
-                config.response_interested_rate_amplifier = msg_config.get("response_interested_rate_amplifier",
-                                                                           config.response_interested_rate_amplifier)
+                config.response_willing_amplifier = msg_config.get(
+                    "response_willing_amplifier", config.response_willing_amplifier
+                )
+                config.response_interested_rate_amplifier = msg_config.get(
+                    "response_interested_rate_amplifier", config.response_interested_rate_amplifier
+                )
                 config.down_frequency_rate = msg_config.get("down_frequency_rate", config.down_frequency_rate)
+            
+            if config.INNER_VERSION in SpecifierSet(">=0.0.6"):
+                config.ban_msgs_regex = msg_config.get("ban_msgs_regex", config.ban_msgs_regex)
 
         def memory(parent: dict):
             memory_config = parent["memory"]
             config.build_memory_interval = memory_config.get("build_memory_interval", config.build_memory_interval)
             config.forget_memory_interval = memory_config.get("forget_memory_interval", config.forget_memory_interval)
-            
+
             # 在版本 >= 0.0.4 时才处理新增的配置项
             if config.INNER_VERSION in SpecifierSet(">=0.0.4"):
                 config.memory_ban_words = set(memory_config.get("memory_ban_words", []))
@@ -303,10 +308,12 @@ class BotConfig:
             config.chinese_typo_enable = chinese_typo_config.get("enable", config.chinese_typo_enable)
             config.chinese_typo_error_rate = chinese_typo_config.get("error_rate", config.chinese_typo_error_rate)
             config.chinese_typo_min_freq = chinese_typo_config.get("min_freq", config.chinese_typo_min_freq)
-            config.chinese_typo_tone_error_rate = chinese_typo_config.get("tone_error_rate",
-                                                                          config.chinese_typo_tone_error_rate)
-            config.chinese_typo_word_replace_rate = chinese_typo_config.get("word_replace_rate",
-                                                                            config.chinese_typo_word_replace_rate)
+            config.chinese_typo_tone_error_rate = chinese_typo_config.get(
+                "tone_error_rate", config.chinese_typo_tone_error_rate
+            )
+            config.chinese_typo_word_replace_rate = chinese_typo_config.get(
+                "word_replace_rate", config.chinese_typo_word_replace_rate
+            )
 
         def groups(parent: dict):
             groups_config = parent["groups"]
@@ -325,61 +332,19 @@ class BotConfig:
         # 例如："notice": "personality 将在 1.3.2 后被移除"，那么在有效版本中的用户就会虽然可以
         # 正常执行程序，但是会看到这条自定义提示
         include_configs = {
-            "personality": {
-                "func": personality,
-                "support": ">=0.0.0"
-            },
-            "emoji": {
-                "func": emoji,
-                "support": ">=0.0.0"
-            },
-            "cq_code": {
-                "func": cq_code,
-                "support": ">=0.0.0"
-            },
-            "bot": {
-                "func": bot,
-                "support": ">=0.0.0"
-            },
-            "response": {
-                "func": response,
-                "support": ">=0.0.0"
-            },
-            "model": {
-                "func": model,
-                "support": ">=0.0.0"
-            },
-            "message": {
-                "func": message,
-                "support": ">=0.0.0"
-            },
-            "memory": {
-                "func": memory,
-                "support": ">=0.0.0",
-                "necessary": False
-            },
-            "mood": {
-                "func": mood,
-                "support": ">=0.0.0"
-            },
-            "keywords_reaction": {
-                "func": keywords_reaction,
-                "support": ">=0.0.2",
-                "necessary": False
-            },
-            "chinese_typo": {
-                "func": chinese_typo,
-                "support": ">=0.0.3",
-                "necessary": False
-            },
-            "groups": {
-                "func": groups,
-                "support": ">=0.0.0"
-            },
-            "others": {
-                "func": others,
-                "support": ">=0.0.0"
-            }
+            "personality": {"func": personality, "support": ">=0.0.0"},
+            "emoji": {"func": emoji, "support": ">=0.0.0"},
+            "cq_code": {"func": cq_code, "support": ">=0.0.0"},
+            "bot": {"func": bot, "support": ">=0.0.0"},
+            "response": {"func": response, "support": ">=0.0.0"},
+            "model": {"func": model, "support": ">=0.0.0"},
+            "message": {"func": message, "support": ">=0.0.0"},
+            "memory": {"func": memory, "support": ">=0.0.0", "necessary": False},
+            "mood": {"func": mood, "support": ">=0.0.0"},
+            "keywords_reaction": {"func": keywords_reaction, "support": ">=0.0.2", "necessary": False},
+            "chinese_typo": {"func": chinese_typo, "support": ">=0.0.3", "necessary": False},
+            "groups": {"func": groups, "support": ">=0.0.0"},
+            "others": {"func": others, "support": ">=0.0.0"},
         }
 
         # 原地修改，将 字符串版本表达式 转换成 版本对象
@@ -391,7 +356,7 @@ class BotConfig:
             with open(config_path, "rb") as f:
                 try:
                     toml_dict = tomli.load(f)
-                except(tomli.TOMLDecodeError) as e:
+                except tomli.TOMLDecodeError as e:
                     logger.critical(f"配置文件bot_config.toml填写有误，请检查第{e.lineno}行第{e.colno}处：{e.msg}")
                     exit(1)
 
@@ -406,7 +371,7 @@ class BotConfig:
                         # 检查配置文件版本是否在支持范围内
                         if config.INNER_VERSION in group_specifierset:
                             # 如果版本在支持范围内，检查是否存在通知
-                            if 'notice' in include_configs[key]:
+                            if "notice" in include_configs[key]:
                                 logger.warning(include_configs[key]["notice"])
 
                             include_configs[key]["func"](toml_dict)
@@ -420,7 +385,7 @@ class BotConfig:
                             raise InvalidVersion(f"当前程序仅支持以下版本范围: {group_specifierset}")
 
                     # 如果 necessary 项目存在，而且显式声明是 False，进入特殊处理
-                    elif "necessary" in include_configs[key] and include_configs[key].get("necessary") == False:
+                    elif "necessary" in include_configs[key] and include_configs[key].get("necessary") is False:
                         # 通过 pass 处理的项虽然直接忽略也是可以的，但是为了不增加理解困难，依然需要在这里显式处理
                         if key == "keywords_reaction":
                             pass

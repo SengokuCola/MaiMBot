@@ -7,8 +7,8 @@ import websockets
 from io import StringIO
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Set, Callable
-import logging
 from loguru import logger
+import os
 
 
 class OutputCapture:
@@ -45,9 +45,10 @@ class OutputCapture:
 class WebSocketServer:
     """WebSocket服务器，用于将捕获的输出发送到前端"""
 
-    def __init__(self, host: str = "localhost", port: int = 8765):
-        self.host = host
-        self.port = port
+    def __init__(self, host: str = None, port: int = None):
+        # 从环境变量或配置获取主机和端口
+        self.host = host or os.getenv("WEBSOCKET_HOST", "localhost")
+        self.port = port or int(os.getenv("WEBSOCKET_PORT", "8765"))
         self.server = None
         self.clients: Set[websockets.WebSocketServerProtocol] = set()
         self.running = False
@@ -68,7 +69,7 @@ class WebSocketServer:
             )
 
             # 发送历史记录
-            history = OutputManager().get_message_history()
+            history = output_manager.get_message_history()
             await websocket.send(
                 json.dumps(
                     {
@@ -93,7 +94,9 @@ class WebSocketServer:
             return
 
         message_json = json.dumps(message)
-        await asyncio.gather(*[client.send(message_json) for client in self.clients])
+        tasks = [client.send(message_json) for client in self.clients]
+        if tasks:
+            await asyncio.gather(*tasks)
 
     def start(self):
         """启动WebSocket服务器"""
@@ -134,30 +137,25 @@ class WebSocketServer:
         logger.info("WebSocket服务器已停止")
 
 
+# 使用threading.Lock进行初始化保护
+_output_manager_lock = threading.Lock()
+_output_manager_initialized = False
+
+
 class OutputManager:
     """单例模式的输出管理器"""
 
-    _instance = None
-    _lock = threading.Lock()
-
-    def __new__(cls):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super(OutputManager, cls).__new__(cls)
-                cls._instance._initialized = False
-            return cls._instance
-
     def __init__(self):
-        if self._initialized:
-            return
-
-        # 初始化属性
-        self.stdout_capture = None
-        self.stderr_capture = None
-        self.websocket_server = WebSocketServer()
-        self.message_history: List[Dict[str, Any]] = []
-        self.max_history_size = 1000  # 最大历史记录数量
-        self._initialized = True
+        global _output_manager_initialized
+        with _output_manager_lock:
+            if not _output_manager_initialized:
+                # 初始化属性
+                self.stdout_capture = None
+                self.stderr_capture = None
+                self.websocket_server = WebSocketServer()
+                self.message_history: List[Dict[str, Any]] = []
+                self.max_history_size = 1000  # 最大历史记录数量
+                _output_manager_initialized = True
 
     def start_capture(self):
         """开始捕获标准输出和错误输出"""
@@ -247,6 +245,10 @@ class OutputManager:
             asyncio.run_coroutine_threadsafe(
                 self.websocket_server.broadcast(message), self.websocket_server.loop
             )
+
+
+# 创建全局单例实例
+output_manager = OutputManager()
 
 
 # 示例用法

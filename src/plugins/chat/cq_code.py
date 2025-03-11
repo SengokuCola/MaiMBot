@@ -1,6 +1,5 @@
 import base64
 import html
-import os
 import time
 from dataclasses import dataclass
 from typing import Dict, Optional
@@ -17,7 +16,7 @@ from urllib3.util import create_urllib3_context
 from ..models.utils_model import LLM_request
 from .config import global_config
 from .mapper import emojimapper
-from .utils_image import storage_emoji, storage_image
+from .utils_image import image_path_to_base64, storage_emoji, storage_image
 from .utils_user import get_user_nickname
 
 driver = get_driver()
@@ -155,8 +154,8 @@ class CQCode:
                     logger.error(f"最终请求失败: {str(e)}")
                 time.sleep(1.5 ** retry)  # 指数退避
 
-            except Exception as e:
-                logger.exception(f"[未知错误]")
+            except Exception:
+                logger.exception("[未知错误]")
                 return None
 
         return None
@@ -281,7 +280,7 @@ class CQCode:
             logger.debug(f"合并后的转发消息: {combined_messages}")
             return f"[转发消息:\n{combined_messages}]"
 
-        except Exception as e:
+        except Exception:
             logger.exception("处理转发消息失败")
             return '[转发消息]'
 
@@ -328,15 +327,10 @@ class CQCode:
         Returns:
             表情包CQ码字符串
         """
-        # 确保使用绝对路径
-        abs_path = os.path.abspath(file_path)
-        # 转义特殊字符
-        escaped_path = abs_path.replace('&', '&amp;') \
-            .replace('[', '&#91;') \
-            .replace(']', '&#93;') \
-            .replace(',', '&#44;')
+        base64_content = image_path_to_base64(file_path)
+
         # 生成CQ码，设置sub_type=1表示这是表情包
-        return f"[CQ:image,file=file:///{escaped_path},sub_type=1]"
+        return f"[CQ:image,file=base64://{base64_content},sub_type=1]"
 
 
 class CQCode_tool:

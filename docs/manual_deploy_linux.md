@@ -66,7 +66,7 @@ pip install -r requirements.txt
 
 ## 数据库配置
 ### 3️⃣ **安装并启动MongoDB**
-- 安装与启动：Debian参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)，Ubuntu参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
+- 安装与启动: Debian参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)，Ubuntu参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
 
 - 默认连接本地27017端口
 ---
@@ -76,15 +76,14 @@ pip install -r requirements.txt
 
 - 参考[NapCat官方文档](https://www.napcat.wiki/guide/boot/Shell#napcat-installer-linux%E4%B8%80%E9%94%AE%E4%BD%BF%E7%94%A8%E8%84%9A%E6%9C%AC-%E6%94%AF%E6%8C%81ubuntu-20-debian-10-centos9)安装
 
--  使用QQ小号登录，添加反向WS地址：
-`ws://127.0.0.1:8080/onebot/v11/ws`
+-  使用QQ小号登录，添加反向WS地址: `ws://127.0.0.1:8080/onebot/v11/ws`
 
 ---
 
 ## 配置文件设置
 ### 5️⃣ **配置文件设置，让麦麦Bot正常工作**
-- 修改环境配置文件：`.env.prod`
-- 修改机器人配置文件：`bot_config.toml`
+- 修改环境配置文件: `.env.prod`
+- 修改机器人配置文件: `bot_config.toml`
 
 
 ---
@@ -107,9 +106,9 @@ python3 bot.py
 ---
 
 ## 常见问题
-🔧 权限问题：在命令前加`sudo`  
-🔌 端口占用：使用`sudo lsof -i :8080`查看端口占用  
-🛡️ 防火墙：确保8080/27017端口开放  
+🔧 权限问题: 在命令前加 `sudo`  
+🔌 端口占用: 使用 `sudo lsof -i :8080` 查看端口占用  
+🛡️ 防火墙: 确保8080/27017端口开放  
 ```bash
 sudo ufw allow 8080/tcp
 sudo ufw allow 27017/tcp

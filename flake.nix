@@ -22,6 +22,7 @@
 
         pythonEnv = pkgs.python3.withPackages (
           ps: with ps; [
+            ruff
             pymongo
             python-dotenv
             pydantic

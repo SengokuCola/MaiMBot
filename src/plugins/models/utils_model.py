@@ -44,8 +44,8 @@ class LLM_request:
             self.db.db.llm_usage.create_index([("model_name", 1)])
             self.db.db.llm_usage.create_index([("user_id", 1)])
             self.db.db.llm_usage.create_index([("request_type", 1)])
-        except Exception as e:
-            logger.error(f"创建数据库索引失败")
+        except Exception:
+            logger.error("创建数据库索引失败")
 
     def _record_usage(self, prompt_tokens: int, completion_tokens: int, total_tokens: int,
                       user_id: str = "system", request_type: str = "chat",
@@ -80,7 +80,7 @@ class LLM_request:
                 f"总计: {total_tokens}"
             )
         except Exception:
-            logger.error(f"记录token使用情况失败")
+            logger.error("记录token使用情况失败")
 
     def _calculate_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
         """计算API调用成本
@@ -194,7 +194,7 @@ class LLM_request:
                                     if hasattr(global_config, 'llm_normal') and global_config.llm_normal.get(
                                             'name') == old_model_name:
                                         global_config.llm_normal['name'] = self.model_name
-                                        logger.warning(f"已将全局配置中的 llm_normal 模型降级")
+                                        logger.warning("已将全局配置中的 llm_normal 模型降级")
 
                                     # 更新payload中的模型名
                                     if payload and 'model' in payload:
@@ -227,7 +227,7 @@ class LLM_request:
                                             delta_content = ""
                                         accumulated_content += delta_content
                                     except Exception:
-                                        logger.exception(f"解析流式输出错")
+                                        logger.exception("解析流式输出错")
                             content = accumulated_content
                             reasoning_content = ""
                             think_match = re.search(r'<think>(.*?)</think>', content, re.DOTALL)
@@ -355,7 +355,7 @@ class LLM_request:
         """构建请求头"""
         if no_key:
             return {
-                "Authorization": f"Bearer **********",
+                "Authorization": "Bearer **********",
                 "Content-Type": "application/json"
             }
         else:
