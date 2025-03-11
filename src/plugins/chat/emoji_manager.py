@@ -115,7 +115,7 @@ class EmojiManager:
             
             try:
                 # 获取所有表情包
-                all_emojis = list(self.db.db.emoji.find({}, {'_id': 1, 'path': 1, 'embedding': 1, 'discription': 1}))
+                all_emojis = list(self.db.db.emoji.find({}, {'_id': 1, 'path': 1, 'embedding': 1, 'description': 1}))
                 
                 if not all_emojis:
                     logger.warning("数据库中没有任何表情包")
@@ -157,9 +157,9 @@ class EmojiManager:
                         {'_id': selected_emoji['_id']},
                         {'$inc': {'usage_count': 1}}
                     )
-                    logger.success(f"找到匹配的表情包: {selected_emoji.get('discription', '无描述')} (相似度: {similarity:.4f})")
+                    logger.success(f"找到匹配的表情包: {selected_emoji.get('description', '无描述')} (相似度: {similarity:.4f})")
                     # 稍微改一下文本描述，不然容易产生幻觉，描述已经包含 表情包 了
-                    return selected_emoji['path'],"[ %s ]" % selected_emoji.get('discription', '无描述')
+                    return selected_emoji['path'],"[ %s ]" % selected_emoji.get('description', '无描述')
                     
             except Exception as search_error:
                 logger.error(f"搜索表情包失败: {str(search_error)}")
@@ -171,7 +171,7 @@ class EmojiManager:
             logger.error(f"获取表情包失败: {str(e)}")
             return None
 
-    async def _get_emoji_discription(self, image_base64: str) -> str:
+    async def _get_emoji_description(self, image_base64: str) -> str:
         """获取表情包的标签"""
         try:
             prompt = '这是一个表情包，使用中文简洁的描述一下表情包的内容和表情包所表达的情感'
@@ -232,30 +232,30 @@ class EmojiManager:
                     continue
                 
                 # 获取表情包的描述
-                discription = await self._get_emoji_discription(image_base64)
+                description = await self._get_emoji_description(image_base64)
                 if global_config.EMOJI_CHECK:
                     check = await self._check_emoji(image_base64)
                     if '是' not in check:
                         os.remove(image_path)
-                        logger.info(f"描述: {discription}")
+                        logger.info(f"描述: {description}")
                         logger.info(f"其不满足过滤规则，被剔除 {check}")
                         continue
                     logger.info(f"check通过 {check}")
-                embedding = await get_embedding(discription)
-                if discription is not None:
+                embedding = await get_embedding(description)
+                if description is not None:
                     # 准备数据库记录
                     emoji_record = {
                         'filename': filename,
                         'path': image_path,
                         'embedding':embedding,
-                        'discription': discription,
+                        'description': description,
                         'timestamp': int(time.time())
                     }
                     
                     # 保存到数据库
                     self.db.db['emoji'].insert_one(emoji_record)
                     logger.success(f"注册新表情包: {filename}")
-                    logger.info(f"描述: {discription}")
+                    logger.info(f"描述: {description}")
                 else:
                     logger.warning(f"跳过表情包: {filename}")
                 
