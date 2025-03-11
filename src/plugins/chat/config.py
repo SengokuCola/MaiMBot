@@ -314,7 +314,15 @@ class BotConfig:
         def keywords_reaction(parent: dict):
             keywords_reaction_config = parent["keywords_reaction"]
             if keywords_reaction_config.get("enable", False):
-                config.keywords_reaction_rules = keywords_reaction_config.get("rules", config.keywords_reaction_rules)
+                config.keywords_reaction_rules = [
+                {
+                    **rule,  # 保留原有字段
+                    "keywords": [kw.lower() for kw in rule.get("keywords", [])]  # 关键词转小写
+                }
+                for rule in keywords_reaction_config.get("rules", config.keywords_reaction_rules)
+                if rule.get("enable", False)
+            ]
+
 
         def chinese_typo(parent: dict):
             chinese_typo_config = parent["chinese_typo"]

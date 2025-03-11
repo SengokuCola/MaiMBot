@@ -20,8 +20,8 @@ class PromptBuilder:
 
 
 
-    async def _build_prompt(self, 
-                    message_txt: str, 
+    async def _build_prompt(self,
+                    message_txt: str,
                     sender_name: str = "某人",
                     relationship_value: float = 0.0,
                     stream_id: Optional[int] = None) -> tuple[str, str]:
@@ -76,7 +76,7 @@ class PromptBuilder:
         chat_in_group=True
         chat_talking_prompt = ''
         if stream_id:
-            chat_talking_prompt = get_recent_group_detailed_plain_text(self.db, stream_id, limit=global_config.MAX_CONTEXT_SIZE,combine = True)   
+            chat_talking_prompt = get_recent_group_detailed_plain_text(self.db, stream_id, limit=global_config.MAX_CONTEXT_SIZE,combine = True)
             chat_stream=chat_manager.get_stream(stream_id)
             if chat_stream.group_info:
                 chat_talking_prompt = f"以下是群里正在聊天的内容：\n{chat_talking_prompt}"
@@ -84,9 +84,9 @@ class PromptBuilder:
                 chat_in_group=False
                 chat_talking_prompt = f"以下是你正在和{sender_name}私聊的内容：\n{chat_talking_prompt}"
                 # print(f"\033[1;34m[调试]\033[0m 已从数据库获取群 {group_id} 的消息记录:{chat_talking_prompt}")
-        
-        
-        
+
+
+
         # 使用新的记忆获取方法
         memory_prompt = ''
         start_time = time.time()
@@ -118,20 +118,35 @@ class PromptBuilder:
         # 激活prompt构建
         activate_prompt = ''
         if chat_in_group:
-            activate_prompt = f"以上是群里正在进行的聊天，{memory_prompt} 现在昵称为 '{sender_name}' 的用户说的:{message_txt}。引起了你的注意,你和ta{relation_prompt},{mood_prompt},你想要{relation_prompt_2}。"          
+            activate_prompt = f"以上是群里正在进行的聊天，{memory_prompt} 现在昵称为 '{sender_name}' 的用户说的:{message_txt}。引起了你的注意,你和ta{relation_prompt},{mood_prompt},你想要{relation_prompt_2}。"
         else:
             activate_prompt = f"以上是你正在和{sender_name}私聊的内容，{memory_prompt} 现在昵称为 '{sender_name}' 的用户说的:{message_txt}。引起了你的注意,你和ta{relation_prompt},{mood_prompt},你想要{relation_prompt_2}。"
 
         # 关键词检测与反应
-        keywords_reaction_prompt = ''
+        # 获取当前规则中(实际命中的关键词-反应)
+        triggered_keyword_prompt_arr = []
+        lower_msg_text = message_txt.lower()
         for rule in global_config.keywords_reaction_rules:
-            if rule.get("enable", False):
-                if any(keyword in message_txt.lower() for keyword in rule.get("keywords", [])):
-                    logger.info(f"检测到以下关键词之一：{rule.get('keywords', [])}，触发反应：{rule.get('reaction', '')}")
-                    keywords_reaction_prompt += rule.get("reaction", "") + '，'
-        
-        #人格选择
-        personality=global_config.PROMPT_PERSONALITY
+            matched_kws = [kw for kw in rule.get("keywords", []) if kw in lower_msg_text]
+            if not matched_kws:
+                continue
+
+            reaction = rule.get("reaction", "")
+            logger.info(f"检测到关键词：{matched_kws}，触发反应：{reaction}")
+            triggered_keyword_prompt_arr.append((matched_kws, reaction))
+
+        """
+            群聊的发言有命中预设规则，你需要按照要求的反应回复: 
+            - 命中关键字: 'test', 'hello'; 回复要求: '回答测试成功'
+            - 命中关键字: '人机'; 回复要求: '否定这一事实，攻击或反问他。注意，只有认为你是机器人才回复，否则不要否认'
+        """
+        keywords_reaction_prompt = ''
+        if len(triggered_keyword_prompt_arr) > 0:
+            keywords_reaction_prompt = '群聊的发言有命中，你需要按照预设的反应回复:\n' \
+                + "\n".join(f'- 命中关键字: {", ".join(map(repr, matched_kws))}; 回复要求: {reaction!r}' for matched_kws, reaction in triggered_keyword_prompt_arr)
+
+        # 人格选择
+        personality = global_config.PROMPT_PERSONALITY
         probability_1 = global_config.PERSONALITY_1
         probability_2 = global_config.PERSONALITY_2
         probability_3 = global_config.PERSONALITY_3
