@@ -63,6 +63,9 @@
 - [🎀 新手配置指南](docs/installation_cute.md) - 通俗易懂的配置教程，适合初次使用的猫娘
 - [⚙️ 标准配置指南](docs/installation_standard.md) - 简明专业的配置说明，适合有经验的用户
 
+### 常见问题
+- [❓ 快速更新Q&A](docs/fast_q_a.md) - 新手用户容易遇到的常见问题，同时提供部分bot魔改相关的注意事项
+
 <div align="left">
 <h3>了解麦麦 </h3>
 </div>
@@ -115,6 +118,7 @@
 - 对思考链长度限制
 - 修复已知bug
 - ~~完善文档~~
+- 完善快速Q&A
 - 修复转发
 - ~~config自动生成和检测~~
 - ~~log别用print~~
