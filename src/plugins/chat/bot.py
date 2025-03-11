@@ -51,47 +51,88 @@ class ChatBot:
         if event.user_id in global_config.ban_user_id:
             return
 
-        group_info = await bot.get_group_info(group_id=event.group_id)
-        sender_info = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id, no_cache=True)
+        # 获取群信息，处理API不可用的情况
+        try:
+            group_info = await bot.get_group_info(group_id=event.group_id)
+            group_name = group_info.get("group_name", f"群聊{event.group_id}")
+        except Exception as e:
+            logger.warning(f"获取群信息失败: {e}，将使用默认群名")
+            group_name = f"群聊{event.group_id}"
 
-        await relationship_manager.update_relationship(user_id=event.user_id, data=sender_info)
-        await relationship_manager.update_relationship_value(user_id=event.user_id, relationship_value=0.5)
+        # 获取发送者信息，处理API不可用的情况
+        try:
+            sender_info = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id, no_cache=True)
+            user_cardname = sender_info.get("card", f"用户{event.user_id}")
+            user_nickname = sender_info.get("nickname", f"用户{event.user_id}")
 
+            # 更新用户关系数据
+            await relationship_manager.update_relationship(user_id=event.user_id, data=sender_info)
+        except Exception as e:
+            logger.warning(f"获取群成员信息失败: {e}，将使用默认信息")
+            # 创建默认的sender_info
+            sender_info = {
+                "card": f"用户{event.user_id}",
+                "nickname": f"用户{event.user_id}",
+                "level": "0",
+                "role": "member",
+            }
+            user_cardname = f"用户{event.user_id}"
+            user_nickname = f"用户{event.user_id}"
+
+            # 使用默认数据更新关系
+            try:
+                await relationship_manager.update_relationship(user_id=event.user_id, data=sender_info)
+            except Exception as re:
+                logger.error(f"更新关系数据失败: {re}")
+
+        # 更新关系值
+        try:
+            await relationship_manager.update_relationship_value(user_id=event.user_id, relationship_value=0.5)
+        except Exception as e:
+            logger.error(f"更新关系值失败: {e}")
+
+        # 创建消息对象
         message = Message(
             group_id=event.group_id,
             user_id=event.user_id,
             message_id=event.message_id,
-            user_cardname=sender_info['card'],
+            user_cardname=user_cardname,
+            user_nickname=user_nickname,
             raw_message=str(event.original_message),
             plain_text=event.get_plaintext(),
             reply_message=event.reply,
+            group_name=group_name,
+            time=event.time,
         )
-        await message.initialize()
+
+        # 初始化消息
+        try:
+            await message.initialize()
+        except Exception as e:
+            logger.error(f"初始化消息失败: {e}")
+            # 即使初始化失败，我们仍然尝试继续处理
 
         # 过滤词
         for word in global_config.ban_words:
             if word in message.detailed_plain_text:
-                logger.info(
-                    f"[{message.group_name}]{message.user_nickname}:{message.processed_plain_text}")
+                logger.info(f"[{message.group_name}]{message.user_nickname}:{message.processed_plain_text}")
                 logger.info(f"[过滤词识别]消息中含有{word}，filtered")
                 return
 
         # 正则表达式过滤
         for pattern in global_config.ban_msgs_regex:
             if re.search(pattern, message.raw_message):
-                logger.info(
-                    f"[{message.group_name}]{message.user_nickname}:{message.raw_message}")
+                logger.info(f"[{message.group_name}]{message.user_nickname}:{message.raw_message}")
                 logger.info(f"[正则表达式过滤]消息匹配到{pattern}，filtered")
                 return
 
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(message.time))
 
         # topic=await topic_identifier.identify_topic_llm(message.processed_plain_text)
-        topic = ''
+        topic = ""
         interested_rate = 0
         interested_rate = await hippocampus.memory_activate_value(message.processed_plain_text) / 100
-        logger.debug(f"对{message.processed_plain_text}"
-                     f"的激活度:{interested_rate}")
+        logger.debug(f"对{message.processed_plain_text}的激活度:{interested_rate}")
         # logger.info(f"\033[1;32m[主题识别]\033[0m 使用{global_config.topic_extract}主题: {topic}")
 
         await self.storage.store_message(message, topic[0] if topic else None)
@@ -104,19 +145,20 @@ class ChatBot:
             global_config,
             event.user_id,
             message.is_emoji,
-            interested_rate
+            interested_rate,
         )
         current_willing = willing_manager.get_willing(event.group_id)
 
         logger.info(
             f"[{current_time}][{message.group_name}]{message.user_nickname}:"
-            f"{message.processed_plain_text}[回复意愿:{current_willing:.2f}][概率:{reply_probability * 100:.1f}%]")
+            f"{message.processed_plain_text}[回复意愿:{current_willing:.2f}][概率:{reply_probability * 100:.1f}%]"
+        )
 
         response = ""
 
         if random() < reply_probability:
             tinking_time_point = round(time.time(), 2)
-            think_id = 'mt' + str(tinking_time_point)
+            think_id = "mt" + str(tinking_time_point)
             thinking_message = Message_Thinking(message=message, message_id=think_id)
 
             message_manager.add_message(thinking_message)
@@ -143,8 +185,9 @@ class ChatBot:
 
             # 记录开始思考的时间，避免从思考到回复的时间太久
             thinking_start_time = thinking_message.thinking_start_time
-            message_set = MessageSet(event.group_id, global_config.BOT_QQ,
-                                     think_id)  # 发送消息的id和产生发送消息的message_thinking是一致的
+            message_set = MessageSet(
+                event.group_id, global_config.BOT_QQ, think_id
+            )  # 发送消息的id和产生发送消息的message_thinking是一致的
             # 计算打字时间，1是为了模拟打字，2是避免多条回复乱序
             accu_typing_time = 0
 
@@ -168,7 +211,7 @@ class ChatBot:
                     group_name=message.group_name,
                     time=timepoint,  # 记录了回复生成的时间
                     thinking_start_time=thinking_start_time,  # 记录了思考开始的时间
-                    reply_message_id=message.message_id
+                    reply_message_id=message.message_id,
                 )
                 await bot_message.initialize()
                 if not mark_head:
@@ -217,16 +260,17 @@ class ChatBot:
             emotion = await self.gpt._get_emotion_tags(raw_content)
             logger.debug(f"为 '{response}' 获取到的情感标签为：{emotion}")
             valuedict = {
-                'happy': 0.5,
-                'angry': -1,
-                'sad': -0.5,
-                'surprised': 0.2,
-                'disgusted': -1.5,
-                'fearful': -0.7,
-                'neutral': 0.1
+                "happy": 0.5,
+                "angry": -1,
+                "sad": -0.5,
+                "surprised": 0.2,
+                "disgusted": -1.5,
+                "fearful": -0.7,
+                "neutral": 0.1,
             }
-            await relationship_manager.update_relationship_value(message.user_id,
-                                                                 relationship_value=valuedict[emotion[0]])
+            await relationship_manager.update_relationship_value(
+                message.user_id, relationship_value=valuedict[emotion[0]]
+            )
             # 使用情绪管理器更新情绪
             self.mood_manager.update_mood_from_emotion(emotion[0], global_config.mood_intensity_factor)
 
