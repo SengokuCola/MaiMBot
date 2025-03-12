@@ -17,6 +17,19 @@ env_mask = {key: os.getenv(key) for key in os.environ}
 
 uvicorn_server = None
 
+# 配置日志
+log_path = os.path.join(os.getcwd(), "logs")
+if not os.path.exists(log_path):
+    os.makedirs(log_path)
+
+# 添加文件日志，启用rotation和retention
+logger.add(
+    os.path.join(log_path, "maimbot_{time:YYYY-MM-DD}.log"),
+    rotation="00:00",  # 每天0点创建新文件
+    retention="30 days",  # 保留30天的日志
+    level="INFO",
+    encoding="utf-8"
+)
 
 def easter_egg():
     # 彩蛋
@@ -194,7 +207,6 @@ def raw_main():
         time.tzset()
 
     easter_egg()
-    load_logger()
     init_config()
     init_env()
     load_env()

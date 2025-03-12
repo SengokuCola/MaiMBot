@@ -3,6 +3,7 @@ data1/
 mongodb/
 NapCat.Framework.Windows.Once/
 log/
+logs/
 /test
 /src/test
 message_queue_content.txt
