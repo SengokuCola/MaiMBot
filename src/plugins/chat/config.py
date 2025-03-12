@@ -82,12 +82,12 @@ class BotConfig:
     chinese_typo_word_replace_rate: float = 0.02  # 整词替换概率
 
     reply_possibility_enhance_enable: bool = True  # 是否启用回复可能性增强
-    minumum_group_reply_possibility = 0  # 最低群组回复可能性
-    minumum_friend_reply_possibility = 0.5  # 最低好友回复可能性
-    max_group_reply_possibility = 1.0  # 最大回复可能性
-    max_friend_reply_possibility = 1.0  # 最大回复可能性
-    group_reply_possibility_enhance = 0  # 群组回复可能性增强
-    friend_reply_possibility_enhance = 0  # 好友回复可能性增强
+    min_group_reply_possibility: float = 0.0  # 最低群组回复可能性
+    min_friend_reply_possibility: float = 0.5  # 最低好友回复可能性
+    max_group_reply_possibility: float = 1.0  # 最大回复可能性
+    max_friend_reply_possibility: float = 1.0  # 最大回复可能性
+    group_reply_possibility_enhance: float = 0.0  # 群组回复可能性增强
+    friend_reply_possibility_enhance: float = 0.0  # 好友回复可能性增强
 
     # 默认人设
     PROMPT_PERSONALITY = [
@@ -354,13 +354,13 @@ class BotConfig:
         def reply_possibility_enhance(parent: dict):
             reply_possibility_enhance_config = parent["reply_possibility_enhance"]
             config.reply_possibility_enhance_enable = reply_possibility_enhance_config.get(
-                "enable", config.reply_possibility_enhance_config_enable
+                "enable", config.reply_possibility_enhance_enable
             )
-            config.minumum_group_reply_possibility = reply_possibility_enhance_config.get(
-                "minumum_group_reply_possibility", config.minumum_group_reply_possibility
+            config.min_group_reply_possibility = reply_possibility_enhance_config.get(
+                "min_group_reply_possibility", config.min_group_reply_possibility
             )
-            config.minumum_friend_reply_possibility = reply_possibility_enhance_config.get(
-                "minumum_friend_reply_possibility", config.minumum_friend_reply_possibility
+            config.min_group_reply_possibility = reply_possibility_enhance_config.get(
+                "min_group_reply_possibility", config.min_group_reply_possibility
             )
             config.max_group_reply_possibility = reply_possibility_enhance_config.get(
                 "max_group_reply_possibility", config.max_group_reply_possibility
@@ -369,10 +369,10 @@ class BotConfig:
                 "max_friend_reply_possibility", config.max_friend_reply_possibility
             )
             config.group_reply_possibility_enhance = reply_possibility_enhance_config.get(
-                "group_reply_possibility_enhance", config.group_reply_possibility_enhance 
+                "group_reply_possibility_enhance", config.group_reply_possibility_enhance
             )
             config.friend_reply_possibility_enhance = reply_possibility_enhance_config.get(
-                "friend_reply_possibility_enhance", config.friend_reply_possibility_enhance 
+                "friend_reply_possibility_enhance", config.friend_reply_possibility_enhance
             )
 
         # 版本表达式：>=1.0.0,<2.0.0

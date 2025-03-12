@@ -109,9 +109,10 @@ enable_debug_output = false  # 是否启用调试输出
 enable_friend_chat = false   # 是否启用好友聊天
 
 [reply_possibility_enhance]
+# 若果开启此项,最终回复概率=原始回复概率+回复可能性增强,并被限制在max和min之间
 enable = true                          # 是否启用回复可能性增强
-minumum_group_reply_possibility = 0    # 最低群组回复可能性
-minumum_friend_reply_possibility = 0.5 # 最低好友回复可能性
+min_group_reply_possibility = 0    # 最低群组回复可能性
+min_friend_reply_possibility = 0.5 # 最低好友回复可能性
 max_group_reply_possibility = 1.0      # 最大回复可能性
 max_friend_reply_possibility = 1.0     # 最大回复可能性
 group_reply_possibility_enhance = 0    # 群组回复可能性增强

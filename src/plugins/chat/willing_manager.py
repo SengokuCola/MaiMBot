@@ -70,6 +70,24 @@ class WillingManager:
 
         reply_probability = max((current_willing - 0.45) * 2, 0)
 
+        # 回复意愿增强器
+        if global_config.reply_possibility_enhance_enable:
+            logger.debug("回复意愿增强器激活")
+            # 群聊
+            if chat_stream.group_info and chat_stream.group_info.group_id:
+                reply_probability += global_config.group_reply_possibility_enhance
+                reply_probability = min(reply_probability, global_config.max_group_reply_possibility)
+                reply_probability = max(reply_probability, global_config.min_group_reply_possibility)
+                logger.debug(f"群聊回复意愿增强: {reply_probability}")
+                
+            # 私聊
+            else:
+                reply_probability += global_config.friend_reply_possibility_enhance
+                reply_probability = min(reply_probability, global_config.max_friend_reply_possibility)
+                reply_probability = max(reply_probability, global_config.min_friend_reply_possibility)
+                logger.debug(f"私聊回复意愿增强: {reply_probability}")
+                
+
         # 检查群组权限（如果是群聊）
         if chat_stream.group_info:
             if chat_stream.group_info.group_id in config.talk_frequency_down_groups:
