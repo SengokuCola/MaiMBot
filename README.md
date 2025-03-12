@@ -77,10 +77,6 @@
 - [🎀 新手配置指南](docs/installation_cute.md) - 通俗易懂的配置教程，适合初次使用的猫娘
 - [⚙️ 标准配置指南](docs/installation_standard.md) - 简明专业的配置说明，适合有经验的用户
 
-### 常见问题
-
-- [❓ 快速 Q & A ](docs/fast_q_a.md) - 针对新手的疑难解答，适合完全没接触过编程的新手
-
 <div align="left">
 <h3>了解麦麦 </h3>
 </div>

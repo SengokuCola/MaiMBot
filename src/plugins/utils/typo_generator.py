@@ -13,8 +13,6 @@ from pathlib import Path
 import jieba
 from pypinyin import Style, pinyin
 
-from loguru import logger
-
 
 class ChineseTypoGenerator:
     def __init__(self, 
@@ -40,9 +38,7 @@ class ChineseTypoGenerator:
         self.max_freq_diff = max_freq_diff
         
         # 加载数据
-        # print("正在加载汉字数据库，请稍候...")
-        logger.info("正在加载汉字数据库，请稍候...")
-        
+        print("正在加载汉字数据库，请稍候...")
         self.pinyin_dict = self._create_pinyin_dict()
         self.char_frequency = self._load_or_create_char_frequency()
     

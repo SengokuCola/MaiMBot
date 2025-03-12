@@ -14,6 +14,16 @@ from ..models.utils_model import LLM_request
 driver = get_driver()
 config = driver.config
 
+Database.initialize(
+    uri=os.getenv("MONGODB_URI"),
+    host=os.getenv("MONGODB_HOST", "127.0.0.1"),
+    port=int(os.getenv("MONGODB_PORT", "27017")),
+    db_name=os.getenv("DATABASE_NAME", "MegBot"),
+    username=os.getenv("MONGODB_USERNAME"),
+    password=os.getenv("MONGODB_PASSWORD"),
+    auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
+)
+
 class ScheduleGenerator:
     def __init__(self):
         # 根据global_config.llm_normal这一字典配置指定模型
@@ -46,7 +56,7 @@ class ScheduleGenerator:
 
         schedule_text = str
 
-        existing_schedule = self.db.schedule.find_one({"date": date_str})
+        existing_schedule = self.db.db.schedule.find_one({"date": date_str})
         if existing_schedule:
             logger.debug(f"{date_str}的日程已存在:")
             schedule_text = existing_schedule["schedule"]
@@ -63,7 +73,7 @@ class ScheduleGenerator:
 
             try:
                 schedule_text, _ = await self.llm_scheduler.generate_response(prompt)
-                self.db.schedule.insert_one({"date": date_str, "schedule": schedule_text})
+                self.db.db.schedule.insert_one({"date": date_str, "schedule": schedule_text})
             except Exception as e:
                 logger.error(f"生成日程失败: {str(e)}")
                 schedule_text = "生成日程时出错了"
@@ -143,7 +153,7 @@ class ScheduleGenerator:
         """打印完整的日程安排"""
         if not self._parse_schedule(self.today_schedule_text):
             logger.warning("今日日程有误，将在下次运行时重新生成")
-            self.db.schedule.delete_one({"date": datetime.datetime.now().strftime("%Y-%m-%d")})
+            self.db.db.schedule.delete_one({"date": datetime.datetime.now().strftime("%Y-%m-%d")})
         else:
             logger.info("=== 今日日程安排 ===")
             for time_str, activity in self.today_schedule.items():

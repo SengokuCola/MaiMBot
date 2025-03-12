@@ -4,8 +4,6 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
-import os
-
 import requests
 
 # 解析各种CQ码

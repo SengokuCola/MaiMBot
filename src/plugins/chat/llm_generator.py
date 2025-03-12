@@ -154,7 +154,7 @@ class ResponseGenerator:
         reasoning_content: str,
     ):
         """保存对话记录到数据库"""
-        self.db.reasoning_logs.insert_one(
+        self.db.db.reasoning_logs.insert_one(
             {
                 "time": time.time(),
                 "chat_id": message.chat_stream.stream_id,
