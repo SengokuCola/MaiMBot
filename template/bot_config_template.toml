@@ -46,10 +46,10 @@ enable_utc_time_control = true # 是否启用基于UTC时间的回复意愿控�
 # 例如配置 0-6点降低到0，7-9点提高到正常值，10-11点降低到0
 # 那么11点之后直到第二天7点之前，机器人都将保持回复意愿为0
 time_periods = [
-    { start_hour = 0, end_hour = 2, mode = "decrease" }, # 0-6点逐渐降低回复意愿到0
-    { start_hour = 7, end_hour = 9, mode = "increase" }, # 7-9点逐渐提高回复意愿到配置值
-    { start_hour = 12, end_hour = 13, mode = "decrease" } # 10-11点逐渐降低回复意愿到0
-    { start_hour = 14, end_hour = 15, mode = "increase" }
+    { start_hour = 0, end_hour = 2, mode = "decrease" }, # 0-2点逐渐降低回复意愿到0 (模拟睡觉)
+    { start_hour = 7, end_hour = 9, mode = "increase" }, # 7-9点逐渐提高回复意愿到配置值(模拟起床)
+    { start_hour = 12, end_hour = 13, mode = "decrease" }, # 12-13点逐渐降低回复意愿到0 (模拟午睡)
+    { start_hour = 14, end_hour = 15, mode = "increase" } # 14-15点逐渐提高回复意愿到配置值  (模拟午睡刚醒)
 ]
 
 ban_words = [
