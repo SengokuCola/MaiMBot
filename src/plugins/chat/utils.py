@@ -12,31 +12,14 @@ from loguru import logger
 from ..models.utils_model import LLM_request
 from ..utils.typo_generator import ChineseTypoGenerator
 from .config import global_config
-from .message import Message
+from .message import MessageRecv,Message
+from .message_base import UserInfo
+from .chat_stream import ChatStream
 from ..moods.moods import MoodManager
 
 driver = get_driver()
 config = driver.config
 
-
-def combine_messages(messages: List[Message]) -> str:
-    """将消息列表组合成格式化的字符串
-    
-    Args:
-        messages: Message对象列表
-        
-    Returns:
-        str: 格式化后的消息字符串
-    """
-    result = ""
-    for message in messages:
-        time_str = time.strftime("%m-%d %H:%M:%S", time.localtime(message.time))
-        name = message.user_nickname or f"用户{message.user_id}"
-        content = message.processed_plain_text or message.plain_text
-
-        result += f"[{time_str}] {name}: {content}\n"
-
-    return result
 
 
 def db_message_to_str(message_dict: Dict) -> str:
@@ -53,20 +36,15 @@ def db_message_to_str(message_dict: Dict) -> str:
     return result
 
 
-def is_mentioned_bot_in_message(message: Message) -> bool:
+def is_mentioned_bot_in_message(message: MessageRecv) -> bool:
     """检查消息是否提到了机器人"""
     keywords = [global_config.BOT_NICKNAME]
+    nicknames = global_config.BOT_ALIAS_NAMES
     for keyword in keywords:
         if keyword in message.processed_plain_text:
             return True
-    return False
-
-
-def is_mentioned_bot_in_txt(message: str) -> bool:
-    """检查消息是否提到了机器人"""
-    keywords = [global_config.BOT_NICKNAME]
-    for keyword in keywords:
-        if keyword in message:
+    for nickname in nicknames:
+        if nickname in message.processed_plain_text:
             return True
     return False
 
@@ -99,46 +77,45 @@ def calculate_information_content(text):
 
 
 def get_cloest_chat_from_db(db, length: int, timestamp: str):
-    """从数据库中获取最接近指定时间戳的聊天记录，并记录读取次数
+    """从数据库中获取最接近指定时间戳的聊天记录
     
+    Args:
+        db: 数据库实例
+        length: 要获取的消息数量
+        timestamp: 时间戳
+        
     Returns:
-        list: 消息记录字典列表，每个字典包含消息内容和时间信息
+        list: 消息记录列表，每个记录包含时间和文本信息
     """
     chat_records = []
     closest_record = db.db.messages.find_one({"time": {"$lte": timestamp}}, sort=[('time', -1)])
     
-    if closest_record and closest_record.get('memorized', 0) < 4:            
+    if closest_record:            
         closest_time = closest_record['time']
-        group_id = closest_record['group_id']
-        # 获取该时间戳之后的length条消息，且groupid相同
-        records = list(db.db.messages.find(
-            {"time": {"$gt": closest_time}, "group_id": group_id}
+        chat_id = closest_record['chat_id']  # 获取chat_id
+        # 获取该时间戳之后的length条消息，保持相同的chat_id
+        chat_records = list(db.db.messages.find(
+            {
+                "time": {"$gt": closest_time},
+                "chat_id": chat_id  # 添加chat_id过滤
+            }
         ).sort('time', 1).limit(length))
         
-        # 更新每条消息的memorized属性
-        for record in records:
-            current_memorized = record.get('memorized', 0)
-            if current_memorized > 3:
-                print("消息已读取3次，跳过")
-                return ''
-                
-            # 更新memorized值
-            db.db.messages.update_one(
-                {"_id": record["_id"]},
-                {"$set": {"memorized": current_memorized + 1}}
-            )
-            
-            # 添加到记录列表中
-            chat_records.append({
-                'text': record["detailed_plain_text"],
+        # 转换记录格式
+        formatted_records = []
+        for record in chat_records:
+            formatted_records.append({
                 'time': record["time"],
-                'group_id': record["group_id"]
+                'chat_id': record["chat_id"],
+                'detailed_plain_text': record.get("detailed_plain_text", "")  # 添加文本内容
             })
             
-    return chat_records
+        return formatted_records
+            
+    return []
 
 
-async def get_recent_group_messages(db, group_id: int, limit: int = 12) -> list:
+async def get_recent_group_messages(db, chat_id:str, limit: int = 12) -> list:
     """从数据库获取群组最近的消息记录
     
     Args:
@@ -152,35 +129,28 @@ async def get_recent_group_messages(db, group_id: int, limit: int = 12) -> list:
 
     # 从数据库获取最近消息
     recent_messages = list(db.db.messages.find(
-        {"group_id": group_id},
-        # {
-        #     "time": 1,
-        #     "user_id": 1,
-        #     "user_nickname": 1,
-        #     "message_id": 1,
-        #     "raw_message": 1,
-        #     "processed_text": 1
-        # }
+        {"chat_id": chat_id},
     ).sort("time", -1).limit(limit))
 
     if not recent_messages:
         return []
 
     # 转换为 Message对象列表
-    from .message import Message
     message_objects = []
     for msg_data in recent_messages:
         try:
+            chat_info=msg_data.get("chat_info",{})
+            chat_stream=ChatStream.from_dict(chat_info)
+            user_info=msg_data.get("user_info",{})
+            user_info=UserInfo.from_dict(user_info)
             msg = Message(
-                time=msg_data["time"],
-                user_id=msg_data["user_id"],
-                user_nickname=msg_data.get("user_nickname", ""),
                 message_id=msg_data["message_id"],
-                raw_message=msg_data["raw_message"],
+                chat_stream=chat_stream,
+                time=msg_data["time"],
+                user_info=user_info,
                 processed_plain_text=msg_data.get("processed_text", ""),
-                group_id=group_id
+                detailed_plain_text=msg_data.get("detailed_plain_text", "")
             )
-            await msg.initialize()
             message_objects.append(msg)
         except KeyError:
             logger.warning("数据库中存在无效的消息")
@@ -191,13 +161,14 @@ async def get_recent_group_messages(db, group_id: int, limit: int = 12) -> list:
     return message_objects
 
 
-def get_recent_group_detailed_plain_text(db, group_id: int, limit: int = 12, combine=False):
+def get_recent_group_detailed_plain_text(db, chat_stream_id: int, limit: int = 12, combine=False):
     recent_messages = list(db.db.messages.find(
-        {"group_id": group_id},
+        {"chat_id": chat_stream_id},
         {
             "time": 1,  # 返回时间字段
-            "user_id": 1,  # 返回用户ID字段
-            "user_nickname": 1,  # 返回用户昵称字段
+            "chat_id":1,
+            "chat_info":1,
+            "user_info": 1,
             "message_id": 1,  # 返回消息ID字段
             "detailed_plain_text": 1  # 返回处理后的文本字段
         }

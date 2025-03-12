@@ -1,0 +1,141 @@
+cbb569e - Create 如果你更新了版本，点我.txt
+a91ef7b - 自动升级配置文件脚本
+ed18f2e - 新增了知识库一键启动漂亮脚本
+80ed568 - fix: 删除print调试代码
+c681a82 - 修复小名无效问题
+e54038f - fix: 从 nixpkgs 增加 numpy 依赖，以避免出现 libc++.so 找不到的问题
+26782c9 - fix: 修复 ENVIRONMENT 变量在同一终端下不能被覆盖的问题
+8c34637 - 提高健壮性
+2688a96 - close SengokuCola/MaiMBot#225 让麦麦可以正确读取分享卡片
+cd16e68 - 修复表情包发送时的缺失参数
+b362c35 - feat: 更新 flake.nix ，采用 venv 的方式生成环境，nixos用户也可以本机运行项目了
+3c8c897 - 屏蔽一个臃肿的debug信息
+9d0152a - 修复了合并过程中造成的代码重复
+956135c - 添加一些注释
+a412741 - 将print变为logger.debug
+3180426 - 修复了没有改掉的typo字段
+aea3bff - 添加私聊过滤开关,更新config,增加约束
+cda6281 - chore: update emoji_manager.py
+baed856 - 修正了私聊屏蔽词输出
+66a0f18 - 修复了私聊时产生reply消息的bug
+3bf5cd6 - feat: 新增运行时重载配置文件；新增根据不同环境(dev;prod)显示不同级别的log
+33cd83b - 添加私聊功能
+aa41f0d - fix: 放反了
+ef8691c - fix: 修改message继承逻辑，修复回复消息无法识别
+7d017be - fix:模型降级
+e1019ad - fix: 修复变量拼写错误并优化代码可读性
+c24bb70 - fix: 流式输出模式增加结束判断与token用量记录
+60a9376 - 添加logger的debug输出开关,默认为不开启
+bfa9a3c - fix: 添加群信息获取的错误处理 (#173)
+4cc5c8e - 修正.env.prod和.env.dev的生成
+dea14c1 - fix: 模型降级目前只对硅基流动的V3和R1生效
+b6edbea - fix: 图片保存路径不正确
+01a6fa8 - fix: 删除神秘test
+20f009d - 修复systemctl强制停止maimbot的问题
+af962c2 - 修复了情绪管理器没有正确导入导致发布出消息
+0586700 - 按照Sourcery提供的建议修改systemctl管理指南
+e48b32a - 在手动部署教程中增加使用systemctl管理
+5760412 - fix: 小修
+1c9b0cc - fix: 修复部分cq码解析错误，merge
+b6867b9 - fix: 统一使用os.getenv获取数据库连接信息，避免从config对象获取不存在的值时出现KeyError
+5e069f7 - 修复记忆保存时无时间信息的bug
+73a3e41 - 修复记忆更新bug
+52c93ba - refactor: use Base64 for emoji CQ codes
+67f6d7c - fix: 保证能运行的小修改
+c32c4fb - refactor: 修改配置文件的版本号
+a54ca8c - Merge remote-tracking branch 'upstream/debug' into feat_regix
+8cbf9bb - feat: 史上最好的消息流重构和图片管理
+9e41c4f - feat: 修改 bot_config 0.0.5 版本的变更日志
+eede406 - fix: 修复nonebot无法加载项目的问题
+00e02ed - fix: 0.0.5 版本的增加分层控制项
+0f99d6a - Update docs/docker_deploy.md
+c789074 - feat: 增加ruff依赖
+ff65ab8 - feat: 修改默认的ruff配置文件，同时消除config的所有不符合规范的地方
+bf97013 - feat: 精简日志，禁用Uvicorn/NoneBot默认日志；启动方式改为显示加载uvicorn，以便优雅shutdown
+d9a2863 - 优化Docker部署文档更新容器部分
+efcf00f - Docker部署文档追加更新部分
+a63ce96 - fix: 更新情感判断模型配置（使配置文件里的 llm_emotion_judge 生效）
+1294c88 - feat: 增加标准化格式化设置
+2e8cd47 - fix: 避免可能出现的日程解析错误
+043a724 - 修一下文档跳转，小美化（
+e4b8865 - 支持别名，可以用不同名称召唤机器人
+7b35ddd - ruff 哥又有新点子
+7899e67 - feat: 重构完成开始测试debug
+354d6d0 - 记忆系统优化
+6cef8fd - 修复时区，删去napcat用不到的端口
+cd96644 - 添加使用说明
+84495f8 - fix
+204744c - 修改配置名与修改过滤对象为raw_message
+a03b490 - Update README.md
+2b2b342 - feat: 增加 ruff 依赖
+72a6749 - fix: 修复docker部署时区指定问题
+ee579bc - Update README.md
+1b611ec - resolve SengokuCola/MaiMBot#167 根据正则表达式过滤消息
+6e2ea82 - refractor: 几乎写完了，进入测试阶段
+2ffdfef - More
+e680405 - fix: typo 'discription'
+68b3f57 - Minor Doc Update
+312f065 - Create linux_deploy_guide_for_beginners.md
+ed505a4 - fix: 使用动态路径替换硬编码的项目路径
+8ff7bb6 - docs: 更新文档，修正格式并添加必要的换行符
+6e36a56 - feat: 增加 MONGODB_URI 的配置项，并将所有env文件的注释单独放在一行（python的dotenv有时无法正确处理行内注释）
+4baa6c6 - feat: 实现MongoDB URI方式连接，并统一数据库连接代码。
+8a32d18 - feat: 优化willing_manager逻辑，增加回复保底概率
+c9f1244 - docs: 改进README.md文档格式和排版
+e1b484a - docs: 添加CLAUDE.md开发指南文件（用于Claude Code）
+a43f949 - fix: remove duplicate message(CR comments)
+fddb641 - fix: 修复错误的空值检测逻辑
+8b7876c - fix: 修复没有上传tag的问题
+6b4130e - feat: 增加stable-dev分支的打包
+052e67b - refactor: 日志打印优化（终于改完了，爽了
+a7f9d05 - 修复记忆整理传入格式问题
+536bb1d - fix: 更新情感判断模型配置
+8d99592 - fix: logger初始化顺序
+052802c - refactor: logger promotion
+8661d94 - doc: README.md - telegram version information
+5746afa - refactor: logger in src\plugins\chat\bot.py
+288dbb6 - refactor: logger in src\plugins\chat\__init__.py
+8428a06 - fix: memory logger optimization (CR comment)
+665c459 - 改进了可视化脚本
+6c35704 - fix: 调用了错误的函数
+3223153 - feat: 一键脚本新增记忆可视化
+3149dd3 - fix: mongodb.zip 无法解压 fix:更换执行命令的方法 fix:当 db 不存在时自动创建 feat: 一键安装完成后启动麦麦
+089d6a6 - feat: 针对硅基流动的Pro模型添加了自动降级功能
+c4b0917 - 一个记忆可视化小脚本
+6a71ea4 - 修复了记忆时间bug,config添加了记忆屏蔽关键词
+1b5344f - fix: 优化bot初始化的日志&格式
+41aa974 - fix: 优化chat/config.py的日志&格式
+980cde7 - fix: 优化scheduler_generator日志&格式
+31a5514 - fix: 调整全局logger加载顺序
+8baef07 - feat: 添加全局logger初始化设置
+5566f17 - refractor: 几乎写完了，进入测试阶段
+6a66933 - feat: 添加开发环境.env.dev初始化
+411ff1a - feat: 安装 MongoDB Compass
+0de9eba - feat: 增加实时更新贡献者列表的功能
+f327f45 - fix: 优化src/plugins/chat/__init__.py的import
+826daa5 - fix: 当虚拟环境存在时跳过创建
+f54de42 - fix: time.tzset 仅在类 Unix 系统可用
+47c4990 - fix: 修复docker部署场景下时间错误的问题
+e23a371 - docs: 添加 compose 注释
+1002822 - docs: 标注 Python 最低版本
+564350d - feat: 校验 Python 版本
+4cc4482 - docs: 添加傻瓜式脚本
+757173a - 带麦麦看了心理医生，让她没那么容易陷入负面情绪
+39bb99c - 将错别字生成提取到配置，一句一个错别字太烦了！
+fe36847 - feat: 超大型重构
+e304dd7 - Update README.md
+b7cfe6d - feat: 发布第 0.0.2 版本配置模板
+ca929d5 - 补充Docker部署文档
+1e97120 - 补充Docker部署文档
+25f7052 - fix: 修复兼容性选项和目前第一个版本之间的版本间隙 0.0.0 版，并将所有的直接退出修改为抛出异常
+c5bdc4f - 防ipv6炸，虽然小概率事件
+d86610d - fix: 修复不能加载环境变量的问题
+2306ebf - feat: 因为判断临界版本范围比较麻烦，增加 notice 字段，删除原本的判断逻辑（存在故障）
+dd09576 - fix: 修复 TypeError: BotConfig.convert_to_specifierset() takes 1 positional argument but 2 were given
+18f839b - fix: 修复 missing 1 required positional argument: 'INNER_VERSION'
+6adb5ed - 调整一些细节，docker部署时可选数据库账密
+07f48e9 - fix: 利用filter来过滤环境变量，避免直接删除key造成的 RuntimeError: dictionary changed size during iteration
+5856074 - fix: 修复无法进行基础设置的问题
+32aa032 - feat: 发布 0.0.1 版本的配置文件
+edc07ac - feat: 重构配置加载器，增加配置文件版本控制和程序兼容能力
+0f492ed - fix: 修复 BASE_URL/KEY 组合检查中被 GPG_KEY 干扰的问题
