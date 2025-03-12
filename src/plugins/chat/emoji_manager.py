@@ -6,6 +6,8 @@ import random
 import time
 import traceback
 from typing import Optional, Tuple
+from PIL import Image
+import io
 
 from loguru import logger
 from nonebot import get_driver
@@ -192,11 +194,11 @@ class EmojiManager:
             logger.error(f"获取标签失败: {str(e)}")
             return None
 
-    async def _check_emoji(self, image_base64: str) -> str:
+    async def _check_emoji(self, image_base64: str, image_format: str) -> str:
         try:
             prompt = f'这是一个表情包，请回答这个表情包是否满足\"{global_config.EMOJI_CHECK_PROMPT}\"的要求，是则回答是，否则回答否，不要出现任何其他内容'
 
-            content, _ = await self.vlm.generate_response_for_image(prompt, image_base64)
+            content, _ = await self.vlm.generate_response_for_image(prompt, image_base64, image_format)
             logger.debug(f"输出描述: {content}")
             return content
 
@@ -237,7 +239,7 @@ class EmojiManager:
                 
                 image_bytes = base64.b64decode(image_base64)
                 image_hash = hashlib.md5(image_bytes).hexdigest()
-                
+                image_format = Image.open(io.BytesIO(image_bytes)).format.lower()
                 # 检查是否已经注册过
                 existing_emoji = self.db['emoji'].find_one({'filename': filename})
                 description = None
@@ -278,7 +280,7 @@ class EmojiManager:
 
 
                 if global_config.EMOJI_CHECK:
-                    check = await self._check_emoji(image_base64)
+                    check = await self._check_emoji(image_base64, image_format)
                     if '是' not in check:
                         os.remove(image_path)
                         logger.info(f"描述: {description}")
