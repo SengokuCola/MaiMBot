@@ -16,10 +16,10 @@ from pypinyin import Style, pinyin
 
 class ChineseTypoGenerator:
     def __init__(self, 
-                 error_rate=0.3, 
+                 error_rate=0.1, 
                  min_freq=5, 
-                 tone_error_rate=0.2, 
-                 word_replace_rate=0.3,
+                 tone_error_rate=0.1, 
+                 word_replace_rate=0.1,
                  max_freq_diff=200):
         """
         初始化错别字生成器
@@ -372,7 +372,7 @@ class ChineseTypoGenerator:
         # 优先从词语错误中选择，如果没有则从单字错误中选择
         correction_suggestion = None
         # 50%概率返回纠正建议
-        if random.random() < 0.5:
+        if random.random() < 0.8:
             if word_typos:
                 wrong_word, correct_word = random.choice(word_typos)
                 correction_suggestion = correct_word

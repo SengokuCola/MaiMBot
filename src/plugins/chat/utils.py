@@ -332,9 +332,9 @@ def random_remove_punctuation(text: str) -> str:
 
 def process_llm_response(text: str) -> List[str]:
     # processed_response = process_text_with_typos(content)
-    if len(text) > 200:
-        logger.warning(f"回复过长 ({len(text)} 字符)，返回默认回复")
-        return ['懒得说']
+    # if len(text) > 200:
+    #     logger.warning(f"回复过长 ({len(text)} 字符)，返回默认回复")
+    #     return ['懒得说']
     # 处理长消息
     typo_generator = ChineseTypoGenerator(
         error_rate=global_config.chinese_typo_error_rate,

@@ -8,7 +8,7 @@ class WillingManager:
         self.group_reply_willing = {}  # 存储每个群的回复意愿
         self._decay_task = None
         self._started = False
-        self.min_reply_willing = 0.01
+        self.min_reply_willing = 0.15
         self.attenuation_coefficient = 0.75
 
     async def _decay_reply_willing(self):
@@ -40,6 +40,9 @@ class WillingManager:
         current_willing = self.group_reply_willing.get(group_id, 0)
 
         logger.debug(f"[{group_id}]的初始回复意愿: {current_willing}")
+
+        if current_willing<0.25:
+            current_willing+=0.03    #多说点话
 
         # 根据消息类型（被cue/表情包）调控
         if is_mentioned_bot:
@@ -73,7 +76,8 @@ class WillingManager:
 
         # 回复概率迭代，保底0.01回复概率
         reply_probability = max(
-            (current_willing - 0.45) * 2,
+            #(current_willing - 0.45) * 2,
+            current_willing,
             self.min_reply_willing
         )
 
