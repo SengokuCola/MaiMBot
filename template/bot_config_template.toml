@@ -1,5 +1,5 @@
 [inner]
-version = "0.0.11"
+version = "0.0.12"
 
 #如果你想要修改配置文件，请在修改后将version的值进行变更
 #如果新增项目，请在BotConfig类下新增相应的变量
