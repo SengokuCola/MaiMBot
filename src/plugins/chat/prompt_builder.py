@@ -18,7 +18,7 @@ def choose_personality():
     personality_choice = random.random()
     i_person = 0
     for i_person, probability in enumerate(probabilities):
-        if personality_choice < personality_choice:
+        if personality_choice < probability:
             break
         personality_choice -= probability
     if i_person < len(personality):
