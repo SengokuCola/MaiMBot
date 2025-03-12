@@ -3,6 +3,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict
+from loguru import logger
 
 from ...common.database import Database
 
@@ -153,8 +154,8 @@ class LLMStatistics:
             try:
                 all_stats = self._collect_all_statistics()
                 self._save_statistics(all_stats)
-            except Exception as e:
-                print(f"\033[1;31m[错误]\033[0m 统计数据处理失败: {e}")
+            except Exception:
+                logger.exception("统计数据处理失败")
             
             # 等待1分钟
             for _ in range(60):

@@ -1,5 +1,5 @@
 [inner]
-version = "0.0.4"
+version = "0.0.8"
 
 #如果你想要修改配置文件，请在修改后将version的值进行变更
 #如果新增项目，请在BotConfig类下新增相应的变量
@@ -15,6 +15,7 @@ version = "0.0.4"
 [bot]
 qq = 123
 nickname = "麦麦"
+alias_names = ["小麦", "阿麦"]
 
 [personality]
 prompt_personality = [
@@ -40,6 +41,13 @@ ban_words = [
     # "403","张三"
     ]
 
+ban_msgs_regex = [
+    # 需要过滤的消息（原始消息）匹配的正则表达式，匹配到的消息将被过滤（支持CQ码），若不了解正则表达式请勿修改
+    #"https?://[^\\s]+", # 匹配https链接
+    #"\\d{4}-\\d{2}-\\d{2}", # 匹配日期
+    # "\\[CQ:at,qq=\\d+\\]" # 匹配@
+]
+
 [emoji]
 check_interval = 120 # 检查表情包的时间间隔
 register_interval = 10 # 注册表情包的时间间隔
@@ -57,8 +65,13 @@ model_r1_distill_probability = 0.1 # 麦麦回答时选择次要回复模型3 �
 max_response_length = 1024 # 麦麦回答的最大token数
 
 [memory]
-build_memory_interval = 300 # 记忆构建间隔 单位秒
-forget_memory_interval = 300 # 记忆遗忘间隔 单位秒
+build_memory_interval = 600 # 记忆构建间隔 单位秒   间隔越低，麦麦学习越多，但是冗余信息也会增多
+memory_compress_rate = 0.1 # 记忆压缩率 控制记忆精简程度 建议保持默认,调高可以获得更多信息，但是冗余信息也会增多
+
+forget_memory_interval = 600 # 记忆遗忘间隔 单位秒   间隔越低，麦麦遗忘越频繁，记忆更精简，但更难学习
+memory_forget_time = 24 #多长时间后的记忆会被遗忘 单位小时 
+memory_forget_percentage = 0.01 # 记忆遗忘比例 控制记忆遗忘程度 越大遗忘越多 建议保持默认
+
 
 memory_ban_words = [ #不希望记忆的词
     # "403","张三"
@@ -92,6 +105,8 @@ word_replace_rate=0.006 # 整词替换概率
 [others]
 enable_advance_output = true # 是否启用高级输出
 enable_kuuki_read = true # 是否启用读空气功能
+enable_debug_output = false # 是否启用调试输出
+enable_friend_chat = false # 是否启用好友聊天
 
 [groups]
 talk_allowed = [

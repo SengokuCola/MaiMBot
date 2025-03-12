@@ -3,14 +3,16 @@
 ## 简介
 
 本项目需要配置两个主要文件：
+
 1. `.env.prod` - 配置API服务和系统环境
 2. `bot_config.toml` - 配置机器人行为和模型
 
 ## API配置说明
 
-`.env.prod`和`bot_config.toml`中的API配置关系如下：
+`.env.prod` 和 `bot_config.toml` 中的API配置关系如下：
 
-### 在.env.prod中定义API凭证：
+### 在.env.prod中定义API凭证
+
 ```ini
 # API凭证配置
 SILICONFLOW_KEY=your_key        # 硅基流动API密钥
@@ -23,7 +25,8 @@ CHAT_ANY_WHERE_KEY=your_key     # ChatAnyWhere API密钥
 CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1  # ChatAnyWhere API地址
 ```
 
-### 在bot_config.toml中引用API凭证：
+### 在bot_config.toml中引用API凭证
+
 ```toml
 [model.llm_reasoning]
 name = "Pro/deepseek-ai/DeepSeek-R1"
@@ -32,9 +35,10 @@ key = "SILICONFLOW_KEY"            # 引用.env.prod中定义的密钥
 ```
 
 如需切换到其他API服务，只需修改引用：
+
 ```toml
 [model.llm_reasoning]
-name = "Pro/deepseek-ai/DeepSeek-R1"
+name = "deepseek-reasoner"       # 改成对应的模型名称，这里为DeepseekR1
 base_url = "DEEP_SEEK_BASE_URL"  # 切换为DeepSeek服务
 key = "DEEP_SEEK_KEY"            # 使用DeepSeek密钥
 ```
@@ -42,6 +46,7 @@ key = "DEEP_SEEK_KEY"            # 使用DeepSeek密钥
 ## 配置文件详解
 
 ### 环境配置文件 (.env.prod)
+
 ```ini
 # API配置
 SILICONFLOW_KEY=your_key
@@ -52,26 +57,36 @@ CHAT_ANY_WHERE_KEY=your_key
 CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1
 
 # 服务配置
+
 HOST=127.0.0.1  # 如果使用Docker部署，需要改成0.0.0.0，否则QQ消息无法传入
-PORT=8080
+PORT=8080       # 与反向端口相同
 
 # 数据库配置
 MONGODB_HOST=127.0.0.1  # 如果使用Docker部署，需要改成数据库容器的名字，默认是mongodb
-MONGODB_PORT=27017
+MONGODB_PORT=27017      # MongoDB端口
+
 DATABASE_NAME=MegBot
-MONGODB_USERNAME = ""  # 数据库用户名
-MONGODB_PASSWORD = ""  # 数据库密码
-MONGODB_AUTH_SOURCE = ""  # 认证数据库
+# 数据库认证信息，如果需要认证就取消注释并填写下面三行
+# MONGODB_USERNAME = ""
+# MONGODB_PASSWORD = ""
+# MONGODB_AUTH_SOURCE = ""
+
+# 也可以使用URI连接数据库，取消注释填写在下面这行（URI的优先级比上面的高）
+# MONGODB_URI=mongodb://127.0.0.1:27017/MegBot
 
 # 插件配置
 PLUGINS=["src2.plugins.chat"]
 ```
 
 ### 机器人配置文件 (bot_config.toml)
+
 ```toml
 [bot]
 qq = "机器人QQ号"  # 必填
 nickname = "麦麦"  # 机器人昵称
+# alias_names: 配置机器人可使用的别名。当机器人在群聊或对话中被调用时，别名可以作为直接命令或提及机器人的关键字使用。
+# 该配置项为字符串数组。例如: ["小麦", "阿麦"]
+alias_names = ["小麦", "阿麦"]  # 机器人别名
 
 [personality]
 prompt_personality = [
@@ -151,4 +166,4 @@ key = "SILICONFLOW_KEY"
 
 3. 其他说明：
    - 项目处于测试阶段，可能存在未知问题
-   - 建议初次使用保持默认配置 
+   - 建议初次使用保持默认配置

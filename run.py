@@ -107,6 +107,8 @@ def install_napcat():
     napcat_filename = input(
         "下载完成后请把文件复制到此文件夹，并将**不包含后缀的文件名**输入至此窗口，如 NapCat.32793.Shell："
     )
+    if(napcat_filename[-4:] == ".zip"):
+        napcat_filename = napcat_filename[:-4]
     extract_files(napcat_filename + ".zip", "napcat")
     print("NapCat 安装完成")
     os.remove(napcat_filename + ".zip")
@@ -126,13 +128,17 @@ if __name__ == "__main__":
     )
     os.system("cls")
     if choice == "1":
-        install_napcat()
-        install_mongodb()
+        confirm = input("首次安装将下载并配置所需组件\n1.确认\n2.取消\n")
+        if confirm == "1":
+            install_napcat()
+            install_mongodb()
+        else:
+            print("已取消安装")
     elif choice == "2":
         run_maimbot()
-        choice = input("是否启动推理可视化？（y/N）").upper()
+        choice = input("是否启动推理可视化？（未完善）（y/N）").upper()
         if choice == "Y":
             run_cmd(r"python src\gui\reasoning_gui.py")
-        choice = input("是否启动记忆可视化？（y/N）").upper()
+        choice = input("是否启动记忆可视化？（未完善）（y/N）").upper()
         if choice == "Y":
             run_cmd(r"python src/plugins/memory_system/memory_manual_build.py")

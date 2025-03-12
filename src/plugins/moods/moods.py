@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass
 
 from ..chat.config import global_config
-
+from loguru import logger
 
 @dataclass
 class MoodState:
@@ -210,7 +210,7 @@ class MoodManager:
 
     def print_mood_status(self) -> None:
         """打印当前情绪状态"""
-        print(f"\033[1;35m[情绪状态]\033[0m 愉悦度: {self.current_mood.valence:.2f}, " 
+        logger.info(f"[情绪状态]愉悦度: {self.current_mood.valence:.2f}, " 
               f"唤醒度: {self.current_mood.arousal:.2f}, "
               f"心情: {self.current_mood.text}")
 

@@ -1,9 +1,12 @@
+import asyncio
 import os
 import shutil
 import sys
 
 import nonebot
 import time
+
+import uvicorn
 from dotenv import load_dotenv
 from loguru import logger
 from nonebot.adapters.onebot.v11 import Adapter
@@ -11,6 +14,8 @@ import platform
 
 # 获取没有加载env时的环境变量
 env_mask = {key: os.getenv(key) for key in os.environ}
+
+uvicorn_server = None
 
 
 def easter_egg():
@@ -58,7 +63,7 @@ def init_env():
 
     # 首先加载基础环境变量.env
     if os.path.exists(".env"):
-        load_dotenv(".env")
+        load_dotenv(".env",override=True)
         logger.success("成功加载基础环境变量配置")
 
 
@@ -94,14 +99,26 @@ def load_env():
 
 def load_logger():
     logger.remove()  # 移除默认配置
-    logger.add(
-        sys.stderr,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <fg #777777>|</> <level>{level: <7}</level> <fg "
-               "#777777>|</> <cyan>{name:.<8}</cyan>:<cyan>{function:.<8}</cyan>:<cyan>{line: >4}</cyan> <fg "
-               "#777777>-</> <level>{message}</level>",
-        colorize=True,
-        level=os.getenv("LOG_LEVEL", "INFO")  # 根据环境设置日志级别，默认为INFO
-    )
+    if os.getenv("ENVIRONMENT") == "dev":
+        logger.add(
+            sys.stderr,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <fg #777777>|</> <level>{level: <7}</level> <fg "
+                   "#777777>|</> <cyan>{name:.<8}</cyan>:<cyan>{function:.<8}</cyan>:<cyan>{line: >4}</cyan> <fg "
+                   "#777777>-</> <level>{message}</level>",
+            colorize=True,
+            level=os.getenv("LOG_LEVEL", "DEBUG"),  # 根据环境设置日志级别，默认为DEBUG
+        )
+    else:
+        logger.add(
+            sys.stderr,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <fg #777777>|</> <level>{level: <7}</level> <fg "
+                "#777777>|</> <cyan>{name:.<8}</cyan>:<cyan>{function:.<8}</cyan>:<cyan>{line: >4}</cyan> <fg "
+                "#777777>-</> <level>{message}</level>",
+            colorize=True,
+            level=os.getenv("LOG_LEVEL", "INFO"),  # 根据环境设置日志级别，默认为INFO
+            filter=lambda record: "nonebot" not in record["name"]
+        )
+
 
 
 def scan_provider(env_config: dict):
@@ -138,7 +155,39 @@ def scan_provider(env_config: dict):
             raise ValueError(f"请检查 '{provider_name}' 提供商配置是否丢失 BASE_URL 或 KEY 环境变量")
 
 
-if __name__ == "__main__":
+async def graceful_shutdown():
+    try:
+        global uvicorn_server
+        if uvicorn_server:
+            uvicorn_server.force_exit = True  # 强制退出
+            await uvicorn_server.shutdown()
+
+        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    except Exception as e:
+        logger.error(f"麦麦关闭失败: {e}")
+
+
+async def uvicorn_main():
+    global uvicorn_server
+    config = uvicorn.Config(
+        app="__main__:app",
+        host=os.getenv("HOST", "127.0.0.1"),
+        port=int(os.getenv("PORT", 8080)),
+        reload=os.getenv("ENVIRONMENT") == "dev",
+        timeout_graceful_shutdown=5,
+        log_config=None,
+        access_log=False
+    )
+    server = uvicorn.Server(config)
+    uvicorn_server = server
+    await server.serve()
+
+
+def raw_main():
     # 利用 TZ 环境变量设定程序工作的时区
     # 仅保证行为一致，不依赖 localtime()，实际对生产环境几乎没有作用
     if platform.system().lower() != 'windows':
@@ -149,6 +198,7 @@ if __name__ == "__main__":
     init_config()
     init_env()
     load_env()
+    load_logger()
 
     env_config = {key: os.getenv(key) for key in os.environ}
     scan_provider(env_config)
@@ -164,10 +214,30 @@ if __name__ == "__main__":
     nonebot.init(**base_config, **env_config)
 
     # 注册适配器
+    global driver
     driver = nonebot.get_driver()
     driver.register_adapter(Adapter)
 
     # 加载插件
     nonebot.load_plugins("src/plugins")
 
-    nonebot.run()
+
+if __name__ == "__main__":
+
+    try:
+        raw_main()
+
+        global app
+        app = nonebot.get_asgi()
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(uvicorn_main())
+    except KeyboardInterrupt:
+        logger.warning("麦麦会努力做的更好的！正在停止中......")
+    except Exception as e:
+        logger.error(f"主程序异常: {e}")
+    finally:
+        loop.run_until_complete(graceful_shutdown())
+        loop.close()
+        logger.info("进程终止完毕，麦麦开始休眠......下次再见哦！")
