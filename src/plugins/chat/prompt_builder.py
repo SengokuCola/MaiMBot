@@ -91,12 +91,20 @@ class PromptBuilder:
         memory_prompt = ''
         start_time = time.time()
 
+        # 获取群组ID
+        group_id = None
+        if stream_id:
+            chat_stream = chat_manager.get_stream(stream_id)
+            if chat_stream and chat_stream.group_info:
+                group_id = chat_stream.group_info.group_id
+
         # 调用 hippocampus 的 get_relevant_memories 方法
         relevant_memories = await hippocampus.get_relevant_memories(
             text=message_txt,
             max_topics=5,
             similarity_threshold=0.4,
-            max_memory_num=5
+            max_memory_num=5,
+            group_id=group_id  # 传递群组ID
         )
 
         if relevant_memories:

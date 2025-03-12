@@ -104,6 +104,12 @@ class BotConfig:
     memory_ban_words: list = field(
         default_factory=lambda: ["表情包", "图片", "回复", "聊天记录"]
     )  # 添加新的配置项默认值
+    
+    # 是否优先使用当前群组的记忆
+    memory_group_priority: bool = True  # 默认开启群组记忆优先
+    
+    # 群组记忆私有化
+    memory_private_groups: dict = field(default_factory=dict)  # 群组私有记忆配置
 
     @staticmethod
     def get_config_dir() -> str:
@@ -304,6 +310,12 @@ class BotConfig:
                 config.memory_forget_time = memory_config.get("memory_forget_time", config.memory_forget_time)
                 config.memory_forget_percentage = memory_config.get("memory_forget_percentage", config.memory_forget_percentage)
                 config.memory_compress_rate = memory_config.get("memory_compress_rate", config.memory_compress_rate)
+                # 添加对memory_group_priority配置项的加载
+                config.memory_group_priority = memory_config.get("memory_group_priority", config.memory_group_priority)
+            
+            if config.INNER_VERSION in SpecifierSet(">=0.0.9"):
+                # 添加群组记忆私有化配置项的加载
+                config.memory_private_groups = memory_config.get("memory_private_groups", {})
 
         def mood(parent: dict):
             mood_config = parent["mood"]

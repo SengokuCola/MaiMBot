@@ -4,6 +4,7 @@ import math
 import random
 import time
 import os
+from typing import Optional
 
 import jieba
 import networkx as nx
@@ -209,15 +210,31 @@ class Hippocampus:
 
         return chat_samples
 
-    async def memory_compress(self, messages: list, compress_rate=0.1):
+    async def memory_compress(self, messages: list, compress_rate=0.1, group_id=None):
         """压缩消息记录为记忆
         
+        Args:
+            messages: 消息记录列表
+            compress_rate: 压缩率
+            group_id: 群组ID，用于标记记忆来源
+            
         Returns:
             tuple: (压缩记忆集合, 相似主题字典)
         """
+        from ..chat.config import global_config  # 导入配置
+        
         if not messages:
             return set(), {}
 
+        # 确定记忆所属的群组
+        memory_group_tag = None
+        if group_id is not None:
+            # 查找群聊所属的群组
+            for group_name, group_ids in global_config.memory_private_groups.items():
+                if str(group_id) in group_ids:
+                    memory_group_tag = f"[群组:{group_name}]"
+                    break
+        
         # 合并消息文本，同时保留时间信息
         input_text = ""
         time_info = ""
@@ -267,7 +284,17 @@ class Hippocampus:
         for topic, task in tasks:
             response = await task
             if response:
-                compressed_memory.add((topic, response[0]))
+                memory_content = response[0]
+                
+                # 添加标记
+                # 优先使用群组标记
+                if memory_group_tag:
+                    memory_content = f"{memory_group_tag}{memory_content}"
+                # 如果没有群组标记但有群组ID，添加简单的群组ID标记
+                elif group_id is not None:
+                    memory_content = f"[群组:{group_id}]{memory_content}"
+                
+                compressed_memory.add((topic, memory_content))
                 # 为每个话题查找相似的已存在主题
                 existing_topics = list(self.memory_graph.G.nodes())
                 similar_topics = []
@@ -316,7 +343,17 @@ class Hippocampus:
             logger.debug(f"进度: [{bar}] {progress:.1f}% ({i}/{len(memory_samples)})")
 
             compress_rate = global_config.memory_compress_rate
-            compressed_memory, similar_topics_dict = await self.memory_compress(messages, compress_rate)
+            
+            # 尝试从消息中提取群组ID
+            group_id = None
+            if messages and len(messages) > 0:
+                first_msg = messages[0]
+                if 'group_id' in first_msg:
+                    group_id = first_msg['group_id']
+                    logger.info(f"检测到消息来自群组: {group_id}")
+            
+            # 传递群组ID到memory_compress
+            compressed_memory, similar_topics_dict = await self.memory_compress(messages, compress_rate, group_id)
             logger.info(f"压缩后记忆数量: {len(compressed_memory)}，似曾相识的话题: {len(similar_topics_dict)}")
             
             current_time = datetime.datetime.now().timestamp()
@@ -841,8 +878,21 @@ class Hippocampus:
         return activation
 
     async def get_relevant_memories(self, text: str, max_topics: int = 5, similarity_threshold: float = 0.4,
-                                    max_memory_num: int = 5) -> list:
-        """根据输入文本获取相关的记忆内容"""
+                                    max_memory_num: int = 5, group_id: Optional[int] = None) -> list:
+        """根据输入文本获取相关的记忆内容
+        
+        Args:
+            text: 输入文本
+            max_topics: 最大主题数
+            similarity_threshold: 相似度阈值
+            max_memory_num: 最大记忆数量
+            group_id: 群组ID，用于优先匹配当前群组的记忆
+            
+        Returns:
+            list: 相关记忆列表
+        """
+        from ..chat.config import global_config  # 导入配置
+        
         # 识别主题
         identified_topics = await self._identify_topics(text)
 
@@ -855,30 +905,134 @@ class Hippocampus:
 
         # 获取最相关的主题
         relevant_topics = self._get_top_topics(all_similar_topics, max_topics)
-
+        
+        # 确定记忆所属的群组
+        current_group_name = None
+        if group_id is not None:
+            # 查找群聊所属的群组
+            for group_name, group_ids in global_config.memory_private_groups.items():
+                if str(group_id) in group_ids:
+                    current_group_name = group_name
+                    break
+        
+        has_private_groups = len(global_config.memory_private_groups) > 0
+        
         # 获取相关记忆内容
         relevant_memories = []
+        group_related_memories = []  # 当前群聊的记忆
+        group_definition_memories = []  # 当前群组的记忆
+        public_memories = []  # 公共记忆
+        
         for topic, score in relevant_topics:
             # 获取该主题的记忆内容
             first_layer, _ = self.memory_graph.get_related_item(topic, depth=1)
             if first_layer:
                 # 如果记忆条数超过限制，随机选择指定数量的记忆
-                if len(first_layer) > max_memory_num / 2:
-                    first_layer = random.sample(first_layer, max_memory_num // 2)
+                if len(first_layer) > max_memory_num:
+                    first_layer = random.sample(first_layer, max_memory_num)
+                
                 # 为每条记忆添加来源主题和相似度信息
                 for memory in first_layer:
-                    relevant_memories.append({
+                    memory_info = {
                         'topic': topic,
                         'similarity': score,
                         'content': memory
-                    })
+                    }
+                    
+                    memory_text = str(memory)
+                    
+                    # 分类处理记忆
+                    if has_private_groups and group_id is not None:
+                        # 如果配置了私有群组且当前在群聊中
+                        if current_group_name:
+                            # 当前群聊属于某个群组
+                            if f"[群组:{current_group_name}]" in memory_text:
+                                # 当前群组的记忆
+                                group_definition_memories.append(memory_info)
+                            elif not any(f"[群组:" in memory_text for _ in range(1)):
+                                # 公共记忆
+                                public_memories.append(memory_info)
+                        else:
+                            # 当前群聊不属于任何群组
+                            if f"[群组:{group_id}]" in memory_text:
+                                # 当前群聊的特定记忆
+                                group_related_memories.append(memory_info)
+                            elif not any(f"[群组:" in memory_text for _ in range(1)):
+                                # 公共记忆
+                                public_memories.append(memory_info)
+                    elif global_config.memory_group_priority and group_id is not None:
+                        # 如果只启用了群组记忆优先
+                        if f"[群组:{group_id}]" in memory_text:
+                            # 当前群聊的记忆，放入群组相关记忆列表
+                            group_related_memories.append(memory_info)
+                        else:
+                            # 其他记忆，放入公共记忆列表
+                            public_memories.append(memory_info)
+                    else:
+                        # 如果没有特殊配置，所有记忆都放入相关记忆列表
+                        relevant_memories.append(memory_info)
 
-        # 如果记忆数量超过5个,随机选择5个
-        # 按相似度排序
-        relevant_memories.sort(key=lambda x: x['similarity'], reverse=True)
-
-        if len(relevant_memories) > max_memory_num:
-            relevant_memories = random.sample(relevant_memories, max_memory_num)
+        # 根据配置决定如何组合记忆
+        if has_private_groups and group_id is not None:
+            # 配置了私有群组且当前在群聊中
+            if current_group_name:
+                # 当前群聊属于某个群组
+                # 优先使用当前群组的记忆，如果不足再使用公共记忆
+                if len(group_definition_memories) >= max_memory_num:
+                    # 如果群组记忆足够，只使用群组记忆
+                    group_definition_memories.sort(key=lambda x: x['similarity'], reverse=True)
+                    relevant_memories = group_definition_memories[:max_memory_num]
+                else:
+                    # 如果群组记忆不足，添加公共记忆
+                    group_definition_memories.sort(key=lambda x: x['similarity'], reverse=True)
+                    public_memories.sort(key=lambda x: x['similarity'], reverse=True)
+                    
+                    relevant_memories = group_definition_memories.copy()
+                    remaining_count = max_memory_num - len(relevant_memories)
+                    if remaining_count > 0 and public_memories:
+                        selected_other = public_memories[:remaining_count]
+                        relevant_memories.extend(selected_other)
+            else:
+                # 当前群聊不属于任何群组
+                # 优先使用当前群聊的记忆，然后使用公共记忆
+                if len(group_related_memories) >= max_memory_num:
+                    # 如果当前群聊记忆足够，只使用当前群聊记忆
+                    group_related_memories.sort(key=lambda x: x['similarity'], reverse=True)
+                    relevant_memories = group_related_memories[:max_memory_num]
+                else:
+                    # 如果当前群聊记忆不足，添加公共记忆
+                    group_related_memories.sort(key=lambda x: x['similarity'], reverse=True)
+                    public_memories.sort(key=lambda x: x['similarity'], reverse=True)
+                    
+                    relevant_memories = group_related_memories.copy()
+                    remaining_count = max_memory_num - len(relevant_memories)
+                    if remaining_count > 0 and public_memories:
+                        selected_other = public_memories[:remaining_count]
+                        relevant_memories.extend(selected_other)
+        elif global_config.memory_group_priority and group_id is not None:
+            # 如果只启用了群组记忆优先
+            # 按相似度排序
+            group_related_memories.sort(key=lambda x: x['similarity'], reverse=True)
+            public_memories.sort(key=lambda x: x['similarity'], reverse=True)
+            
+            # 优先使用群组相关记忆，如果不足再使用其他记忆
+            if len(group_related_memories) >= max_memory_num:
+                # 如果群组相关记忆足够，只使用群组相关记忆
+                relevant_memories = group_related_memories[:max_memory_num]
+            else:
+                # 使用所有群组相关记忆
+                relevant_memories = group_related_memories.copy()
+                # 如果群组相关记忆不足，添加其他记忆
+                remaining_count = max_memory_num - len(relevant_memories)
+                if remaining_count > 0 and public_memories:
+                    # 从其他记忆中选择剩余需要的数量
+                    selected_other = public_memories[:remaining_count]
+                    relevant_memories.extend(selected_other)
+        else:
+            # 如果没有特殊配置，按相似度排序
+            relevant_memories.sort(key=lambda x: x['similarity'], reverse=True)
+            if len(relevant_memories) > max_memory_num:
+                relevant_memories = relevant_memories[:max_memory_num]
 
         return relevant_memories
 
