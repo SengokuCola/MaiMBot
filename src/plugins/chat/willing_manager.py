@@ -9,7 +9,6 @@ from .chat_stream import ChatStream
 class WillingManager:
     def __init__(self):
         self.chat_reply_willing: Dict[str, float] = {}  # 存储每个聊天流的回复意愿
-        self.chat_reply_willing: Dict[str, float] = {}  # 存储每个聊天流的回复意愿
         self._decay_task = None
         self._started = False
         
@@ -17,8 +16,6 @@ class WillingManager:
         """定期衰减回复意愿"""
         while True:
             await asyncio.sleep(5)
-            for chat_id in self.chat_reply_willing:
-                self.chat_reply_willing[chat_id] = max(0, self.chat_reply_willing[chat_id] * 0.6)
             for chat_id in self.chat_reply_willing:
                 self.chat_reply_willing[chat_id] = max(0, self.chat_reply_willing[chat_id] * 0.6)
                 
@@ -29,9 +26,6 @@ class WillingManager:
             return self.chat_reply_willing.get(stream.stream_id, 0)
         return 0
     
-    def set_willing(self, chat_id: str, willing: float):
-        """设置指定聊天流的回复意愿"""
-        self.chat_reply_willing[chat_id] = willing
     def set_willing(self, chat_id: str, willing: float):
         """设置指定聊天流的回复意愿"""
         self.chat_reply_willing[chat_id] = willing
