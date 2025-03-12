@@ -281,23 +281,32 @@ class Hippocampus:
         # 等待所有任务完成
         compressed_memory = set()
         similar_topics_dict = {}  # 存储每个话题的相似主题列表
+        
         for topic, task in tasks:
             response = await task
             if response:
-                # 使用字典结构存储记忆内容与群组ID
-                memory_content = {
-                    'content': response[0],
-                    'group_id': group_id
-                }
-                compressed_memory.add((topic, memory_content))
+                # 为每个主题创建特定群聊的主题节点名称
+                group_specific_topic = topic
+                if group_id:
+                    group_specific_topic = f"{topic}_g{group_id}"
                 
-                # 为每个话题查找相似的已存在主题
+                # 记录主题内容
+                memory_content = response[0]
+                compressed_memory.add((group_specific_topic, memory_content))
+                
+                # 为每个话题查找相似的已存在主题（不考虑群聊前缀）
                 existing_topics = list(self.memory_graph.G.nodes())
                 similar_topics = []
                 
                 for existing_topic in existing_topics:
+                    # 提取基础主题名（去除群聊前缀）
+                    base_existing_topic = existing_topic
+                    if "_g" in existing_topic:
+                        base_existing_topic = existing_topic.split("_g")[0]
+                    
+                    # 计算基础主题的相似度
                     topic_words = set(jieba.cut(topic))
-                    existing_words = set(jieba.cut(existing_topic))
+                    existing_words = set(jieba.cut(base_existing_topic))
                     
                     all_words = topic_words | existing_words
                     v1 = [1 if word in topic_words else 0 for word in all_words]
@@ -305,12 +314,13 @@ class Hippocampus:
                     
                     similarity = cosine_similarity(v1, v2)
                     
-                    if similarity >= 0.6:
+                    # 如果相似度高且不是同一主题在同一群聊
+                    if similarity >= 0.6 and existing_topic != group_specific_topic:
                         similar_topics.append((existing_topic, similarity))
                 
                 similar_topics.sort(key=lambda x: x[1], reverse=True)
                 similar_topics = similar_topics[:5]
-                similar_topics_dict[topic] = similar_topics
+                similar_topics_dict[group_specific_topic] = similar_topics
 
         return compressed_memory, similar_topics_dict
 
@@ -351,15 +361,25 @@ class Hippocampus:
             
             for topic, memory in compressed_memory:
                 logger.info(f"添加节点: {topic}")
-                self.memory_graph.add_dot(topic, memory, group_id)
+                self.memory_graph.add_dot(topic, memory)  # 不再需要传递group_id，因为已经包含在topic名称中
                 all_topics.append(topic)
                 
-                # 连接相似的已存在主题
+                # 连接相似的已存在主题，但使用较弱的连接强度
                 if topic in similar_topics_dict:
                     similar_topics = similar_topics_dict[topic]
                     for similar_topic, similarity in similar_topics:
                         if topic != similar_topic:
+                            # 如果是跨群聊的相似主题，使用较弱的连接强度
+                            is_cross_group = False
+                            if ("_g" in topic and "_g" in similar_topic and 
+                                topic.split("_g")[1] != similar_topic.split("_g")[1]):
+                                is_cross_group = True
+                            
+                            # 跨群聊的相似主题使用较弱的连接强度
                             strength = int(similarity * 10)
+                            if is_cross_group:
+                                strength = int(similarity * 5)  # 降低跨群聊连接的强度
+                            
                             logger.info(f"连接相似节点: {topic} 和 {similar_topic} (强度: {strength})")
                             self.memory_graph.G.add_edge(topic, similar_topic, 
                                                        strength=strength,
@@ -710,11 +730,12 @@ class Hippocampus:
         prompt = f'这是一段文字，{time_info}：{text}。我想让你基于这段文字来概括"{topic}"这个概念，帮我总结成一句自然的话，可以包含时间和人物，以及具体的观点。只输出这句话就好'
         return prompt
 
-    async def _identify_topics(self, text: str) -> list:
+    async def _identify_topics(self, text: str, group_id: str = None) -> list:
         """从文本中识别可能的主题
         
         Args:
             text: 输入文本
+            group_id: 群聊ID，用于生成群聊特定的主题名
             
         Returns:
             list: 识别出的主题列表
@@ -724,6 +745,10 @@ class Hippocampus:
         topics = [topic.strip() for topic in
                   topics_response[0].replace("，", ",").replace("、", ",").replace(" ", ",").split(",") if topic.strip()]
         # print(f"话题: {topics}")
+
+        # 如果提供了群聊ID，为每个主题添加群聊标识
+        if group_id:
+            topics = [f"{topic}_g{group_id}" for topic in topics]
 
         return topics
 
@@ -747,11 +772,36 @@ class Hippocampus:
                 # print(f"\033[1;32m[{debug_info}]\033[0m 正在思考有没有见过: {topic}")
                 pass
 
-            topic_vector = text_to_vector(topic)
+            # 提取基础主题（去除群聊标识）
+            base_topic = topic
+            if "_g" in topic:
+                base_topic = topic.split("_g")[0]
+                
+            # 获取该主题所属的群聊ID（如果有）
+            topic_group_id = None
+            if "_g" in topic:
+                try:
+                    topic_group_id = topic.split("_g")[1]
+                except:
+                    pass
+                
+            topic_vector = text_to_vector(base_topic)
             has_similar_topic = False
 
             for memory_topic in all_memory_topics:
-                memory_vector = text_to_vector(memory_topic)
+                # 提取记忆主题的基础主题和群聊ID
+                base_memory_topic = memory_topic
+                memory_topic_group_id = None
+                
+                if "_g" in memory_topic:
+                    parts = memory_topic.split("_g")
+                    base_memory_topic = parts[0]
+                    try:
+                        memory_topic_group_id = parts[1]
+                    except:
+                        pass
+                
+                memory_vector = text_to_vector(base_memory_topic)
                 # 获取所有唯一词
                 all_words = set(topic_vector.keys()) | set(memory_vector.keys())
                 # 构建向量
@@ -760,7 +810,12 @@ class Hippocampus:
                 # 计算相似度
                 similarity = cosine_similarity(v1, v2)
 
+                # 如果基础主题相似
                 if similarity >= similarity_threshold:
+                    # 如果两个主题来自同一群聊，提高相似度
+                    if topic_group_id and memory_topic_group_id and topic_group_id == memory_topic_group_id:
+                        similarity *= 1.2  # 提高20%的相似度
+                        
                     has_similar_topic = True
                     if debug_info:
                         # print(f"\033[1;32m[{debug_info}]\033[0m 找到相似主题: {topic} -> {memory_topic} (相似度: {similarity:.2f})")
@@ -870,9 +925,17 @@ class Hippocampus:
 
     async def get_relevant_memories(self, text: str, max_topics: int = 5, similarity_threshold: float = 0.4,
                                     max_memory_num: int = 5, group_id: str = None) -> list:
-        """根据输入文本获取相关的记忆内容"""
-        # 识别主题
-        identified_topics = await self._identify_topics(text)
+        """根据输入文本获取相关的记忆内容
+        
+        Args:
+            text: 输入文本
+            max_topics: 最大主题数量
+            similarity_threshold: 相似度阈值
+            max_memory_num: 最大记忆数量
+            group_id: 群聊ID，用于优先获取指定群聊的记忆
+        """
+        # 识别主题，传入群聊ID
+        identified_topics = await self._identify_topics(text, group_id)
 
         # 查找相似主题
         all_similar_topics = self._find_similar_topics(
@@ -885,44 +948,58 @@ class Hippocampus:
         relevant_topics = self._get_top_topics(all_similar_topics, max_topics)
 
         # 获取相关记忆内容
-        relevant_memories = []
+        current_group_memories = []  # 当前群聊的记忆
+        other_group_memories = []    # 其他群聊的记忆
+        
         for topic, score in relevant_topics:
+            # 检查主题是否属于当前群聊
+            topic_group_id = None
+            if "_g" in topic:
+                try:
+                    topic_group_id = topic.split("_g")[1]
+                except:
+                    pass
+                    
             # 获取该主题的记忆内容
             first_layer, _ = self.memory_graph.get_related_item(topic, depth=1)
             if first_layer:
-                # 如果记忆条数超过限制，随机选择指定数量的记忆
-                if len(first_layer) > max_memory_num / 2:
-                    first_layer = random.sample(first_layer, max_memory_num // 2)
-                
-                # 为每条记忆添加来源主题和相似度信息
+                # 构建记忆项
                 for memory in first_layer:
-                    # 添加群聊ID筛选
-                    # 如果memory是字典格式且有群组信息，则进行过滤
-                    if isinstance(memory, dict) and 'group_id' in memory:
-                        # 当前没有指定群聊ID或者记忆来自相同群聊时才添加
-                        if group_id is None or memory['group_id'] == group_id:
-                            relevant_memories.append({
-                                'topic': topic,
-                                'similarity': score,
-                                'content': memory['content'] if 'content' in memory else memory,
-                                'group_id': memory.get('group_id')
-                            })
+                    memory_item = {
+                        'topic': topic,
+                        'similarity': score,
+                        'content': memory if not isinstance(memory, dict) else memory.get('content', memory),
+                        'group_id': topic_group_id
+                    }
+                    
+                    # 分类记忆
+                    if topic_group_id == group_id:
+                        current_group_memories.append(memory_item)
                     else:
-                        # 对于没有群组信息的旧记忆，保持向后兼容
-                        relevant_memories.append({
-                            'topic': topic,
-                            'similarity': score,
-                            'content': memory,
-                            'group_id': None  # 旧数据没有群组信息
-                        })
-
+                        other_group_memories.append(memory_item)
+        
         # 按相似度排序
-        relevant_memories.sort(key=lambda x: x['similarity'], reverse=True)
-
-        if len(relevant_memories) > max_memory_num:
-            relevant_memories = random.sample(relevant_memories, max_memory_num)
-
-        return relevant_memories
+        current_group_memories.sort(key=lambda x: x['similarity'], reverse=True)
+        other_group_memories.sort(key=lambda x: x['similarity'], reverse=True)
+        
+        # 控制返回的记忆数量
+        # 优先添加当前群聊的记忆，如果不足，再添加其他群聊的记忆
+        final_memories = current_group_memories
+        remaining_slots = max_memory_num - len(final_memories)
+        
+        if remaining_slots > 0 and other_group_memories:
+            # 添加其他群聊的记忆，但最多添加remaining_slots个
+            final_memories.extend(other_group_memories[:remaining_slots])
+        
+        # 如果记忆总数仍然超过限制，随机采样
+        if len(final_memories) > max_memory_num:
+            final_memories = random.sample(final_memories, max_memory_num)
+            
+        # 记录日志，显示当前群聊和其他群聊分别找到了多少记忆
+        logger.debug(f"[记忆检索] 当前群聊({group_id})找到 {len(current_group_memories)} 条记忆，其他群聊找到 {len(other_group_memories)} 条记忆")
+        logger.debug(f"[记忆检索] 最终返回 {len(final_memories)} 条记忆")
+        
+        return final_memories
 
     def get_group_memories(self, group_id: str) -> list:
         """获取特定群聊的所有记忆
@@ -937,17 +1014,17 @@ class Hippocampus:
         all_nodes = list(self.memory_graph.G.nodes(data=True))
         
         for concept, data in all_nodes:
-            memory_items = data.get('memory_items', [])
-            if not isinstance(memory_items, list):
-                memory_items = [memory_items] if memory_items else []
-                
-            # 筛选出属于指定群聊的记忆
-            for memory in memory_items:
-                if isinstance(memory, dict) and 'group_id' in memory and memory['group_id'] == group_id:
-                    # 添加到结果列表
+            # 检查主题是否属于指定群聊
+            if f"_g{group_id}" in concept:
+                memory_items = data.get('memory_items', [])
+                if not isinstance(memory_items, list):
+                    memory_items = [memory_items] if memory_items else []
+                    
+                # 添加所有记忆项
+                for memory in memory_items:
                     all_memories.append({
                         'topic': concept,
-                        'content': memory.get('content', str(memory))
+                        'content': memory if not isinstance(memory, dict) else memory.get('content', str(memory))
                     })
         
         return all_memories
