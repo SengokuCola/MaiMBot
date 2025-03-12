@@ -46,7 +46,7 @@ class ReasoningGUI:
 
         # 初始化数据库连接
         try:
-            self.db = Database.get_instance()
+            self.db = Database.get_instance().db
             logger.success("数据库连接成功")
         except RuntimeError:
             logger.warning("数据库未初始化，正在尝试初始化...")
@@ -60,7 +60,7 @@ class ReasoningGUI:
                     password=os.getenv("MONGODB_PASSWORD"),
                     auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
                 )
-                self.db = Database.get_instance()
+                self.db = Database.get_instance().db
                 logger.success("数据库初始化成功")
             except Exception:
                 logger.exception("数据库初始化失败")

@@ -10,7 +10,6 @@ from .message import MessageSending, MessageThinking, MessageRecv, MessageSet
 
 from .storage import MessageStorage
 from .config import global_config
-from .utils import truncate_message
 
 
 class Message_Sender:
@@ -35,7 +34,6 @@ class Message_Sender:
             message_json = message.to_dict()
             message_send = MessageSendCQ(data=message_json)
             # logger.debug(message_send.message_info,message_send.raw_message)
-            message_preview = truncate_message(message.processed_plain_text)
             if (
                 message_send.message_info.group_info
                 and message_send.message_info.group_info.group_id
@@ -46,10 +44,10 @@ class Message_Sender:
                         message=message_send.raw_message,
                         auto_escape=False,
                     )
-                    logger.success(f"[调试] 发送消息“{message_preview}”成功")
+                    logger.success(f"[调试] 发送消息{message.processed_plain_text}成功")
                 except Exception as e:
                     logger.error(f"[调试] 发生错误 {e}")
-                    logger.error(f"[调试] 发送消息“{message_preview}”失败")
+                    logger.error(f"[调试] 发送消息{message.processed_plain_text}失败")
             else:
                 try:
                     logger.debug(message.message_info.user_info)
@@ -58,10 +56,10 @@ class Message_Sender:
                         message=message_send.raw_message,
                         auto_escape=False,
                     )
-                    logger.success(f"[调试] 发送消息“{message_preview}”成功")
+                    logger.success(f"[调试] 发送消息{message.processed_plain_text}成功")
                 except Exception as e:
-                    logger.error(f"[调试] 发生错误 {e}")
-                    logger.error(f"[调试] 发送消息“{message_preview}”失败")
+                    logger.error(f"发生错误 {e}")
+                    logger.error(f"[调试] 发送消息{message.processed_plain_text}失败")
 
 
 class MessageContainer:
@@ -186,7 +184,7 @@ class MessageManager:
                 await message_earliest.process()
 
                 print(
-                    f"\033[1;34m[调试]\033[0m 消息“{truncate_message(message_earliest.processed_plain_text)}”正在发送中"
+                    f"\033[1;34m[调试]\033[0m 消息'{message_earliest.processed_plain_text}'正在发送中"
                 )
 
                 await self.storage.store_message(

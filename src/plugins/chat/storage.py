@@ -13,17 +13,23 @@ class MessageStorage:
     async def store_message(self, message: Union[MessageSending, MessageRecv],chat_stream:ChatStream, topic: Optional[str] = None) -> None:
         """存储消息到数据库"""
         try:
+            # 提取群组ID信息，如果存在的话
+            group_id = None
+            if chat_stream.group_info:
+                group_id = str(chat_stream.group_info.group_id)
+                
             message_data = {
                     "message_id": message.message_info.message_id,
                     "time": message.message_info.time,
-                    "chat_id":chat_stream.stream_id,
+                    "chat_id": chat_stream.stream_id,
                     "chat_info": chat_stream.to_dict(),
                     "user_info": message.message_info.user_info.to_dict(),
                     "processed_plain_text": message.processed_plain_text,
                     "detailed_plain_text": message.detailed_plain_text,
                     "topic": topic,
+                    "group_id": group_id,  # 显式添加group_id字段
                 }
-            self.db.messages.insert_one(message_data)
+            self.db.db.messages.insert_one(message_data)
         except Exception:
             logger.exception("存储消息失败")
 

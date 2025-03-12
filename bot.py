@@ -12,13 +12,24 @@ from loguru import logger
 from nonebot.adapters.onebot.v11 import Adapter
 import platform
 
-from src.common.database import Database
-
 # 获取没有加载env时的环境变量
 env_mask = {key: os.getenv(key) for key in os.environ}
 
 uvicorn_server = None
 
+# 配置日志
+log_path = os.path.join(os.getcwd(), "logs")
+if not os.path.exists(log_path):
+    os.makedirs(log_path)
+
+# 添加文件日志，启用rotation和retention
+logger.add(
+    os.path.join(log_path, "maimbot_{time:YYYY-MM-DD}.log"),
+    rotation="00:00",  # 每天0点创建新文件
+    retention="30 days",  # 保留30天的日志
+    level="INFO",
+    encoding="utf-8"
+)
 
 def easter_egg():
     # 彩蛋
@@ -98,17 +109,6 @@ def load_env():
         logger.error(f"ENVIRONMENT 配置错误，请检查 .env 文件中的 ENVIRONMENT 变量及对应 .env.{env} 是否存在")
         RuntimeError(f"ENVIRONMENT 配置错误，请检查 .env 文件中的 ENVIRONMENT 变量及对应 .env.{env} 是否存在")
 
-def init_database():
-    Database.initialize(
-        uri=os.getenv("MONGODB_URI"),
-        host=os.getenv("MONGODB_HOST", "127.0.0.1"),
-        port=int(os.getenv("MONGODB_PORT", "27017")),
-        db_name=os.getenv("DATABASE_NAME", "MegBot"),
-        username=os.getenv("MONGODB_USERNAME"),
-        password=os.getenv("MONGODB_PASSWORD"),
-        auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
-    )
-    
 
 def load_logger():
     logger.remove()  # 移除默认配置
@@ -207,11 +207,9 @@ def raw_main():
         time.tzset()
 
     easter_egg()
-    load_logger()
     init_config()
     init_env()
     load_env()
-    init_database() # 加载完成环境后初始化database
     load_logger()
 
     env_config = {key: os.getenv(key) for key in os.environ}
@@ -237,6 +235,7 @@ def raw_main():
 
 
 if __name__ == "__main__":
+
     try:
         raw_main()
 

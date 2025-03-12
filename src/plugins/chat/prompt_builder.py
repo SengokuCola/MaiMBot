@@ -91,12 +91,20 @@ class PromptBuilder:
         memory_prompt = ''
         start_time = time.time()
 
-        # 调用 hippocampus 的 get_relevant_memories 方法
+        # 获取群聊ID
+        stream_group_id = None
+        if stream_id:
+            chat_stream = chat_manager.get_stream(stream_id)
+            if chat_stream and chat_stream.group_info:
+                stream_group_id = str(chat_stream.group_info.group_id)
+
+        # 调用 hippocampus 的 get_relevant_memories 方法，添加群聊ID参数
         relevant_memories = await hippocampus.get_relevant_memories(
             text=message_txt,
             max_topics=5,
             similarity_threshold=0.4,
-            max_memory_num=5
+            max_memory_num=5,
+            group_id=stream_group_id
         )
 
         if relevant_memories:
@@ -311,7 +319,7 @@ class PromptBuilder:
             {"$project": {"content": 1, "similarity": 1}}
         ]
 
-        results = list(self.db.knowledges.aggregate(pipeline))
+        results = list(self.db.db.knowledges.aggregate(pipeline))
         # print(f"\033[1;34m[调试]\033[0m获取知识库内容结果: {results}")
 
         if not results:

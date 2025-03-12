@@ -53,7 +53,7 @@ class LLMStatistics:
             "costs_by_model": defaultdict(float)
         }
         
-        cursor = self.db.llm_usage.find({
+        cursor = self.db.db.llm_usage.find({
             "timestamp": {"$gte": start_time}
         })
         

@@ -32,6 +32,18 @@ _message_manager_started = False
 driver = get_driver()
 config = driver.config
 
+Database.initialize(
+    uri=os.getenv("MONGODB_URI"),
+    host=os.getenv("MONGODB_HOST", "127.0.0.1"),
+    port=int(os.getenv("MONGODB_PORT", "27017")),
+    db_name=os.getenv("DATABASE_NAME", "MegBot"),
+    username=os.getenv("MONGODB_USERNAME"),
+    password=os.getenv("MONGODB_PASSWORD"),
+    auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
+)
+logger.success("初始化数据库成功")
+
+
 # 初始化表情管理器
 emoji_manager.initialize()
 

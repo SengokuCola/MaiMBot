@@ -235,10 +235,10 @@ class ChatBot:
                     is_head=not mark_head,
                     is_emoji=False,
                 )
-                logger.debug(f"bot_message: {bot_message}")
+                print(f"bot_message: {bot_message}")
                 if not mark_head:
                     mark_head = True
-                logger.debug(f"添加消息到message_set: {bot_message}")
+                print(f"添加消息到message_set: {bot_message}")
                 message_set.add_message(bot_message)
 
             # message_set 可以直接加入 message_manager
