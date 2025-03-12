@@ -104,7 +104,6 @@ class LLM_request:
             endpoint: str,
             prompt: str = None,
             image_base64: str = None,
-            image_format: str = None,
             payload: dict = None,
             retry_policy: dict = None,
             response_handler: callable = None,
@@ -116,7 +115,6 @@ class LLM_request:
             endpoint: API端点路径 (如 "chat/completions")
             prompt: prompt文本
             image_base64: 图片的base64编码
-            image_format: 图片格式
             payload: 请求体数据
             retry_policy: 自定义重试策略
             response_handler: 自定义响应处理器
@@ -153,7 +151,7 @@ class LLM_request:
 
         # 构建请求体
         if image_base64:
-            payload = await self._build_payload(prompt, image_base64, image_format)
+            payload = await self._build_payload(prompt, image_base64)
         elif payload is None:
             payload = await self._build_payload(prompt)
 
@@ -174,7 +172,7 @@ class LLM_request:
                             if response.status == 413:
                                 logger.warning("请求体过大，尝试压缩...")
                                 image_base64 = compress_base64_image_by_scale(image_base64)
-                                payload = await self._build_payload(prompt, image_base64, image_format)
+                                payload = await self._build_payload(prompt, image_base64)
                             elif response.status in [500, 503]:
                                 logger.error(f"错误码: {response.status} - {error_code_mapping.get(response.status)}")
                                 raise RuntimeError("服务器负载过高，模型恢复失败QAQ")
@@ -296,7 +294,7 @@ class LLM_request:
                 new_params["max_completion_tokens"] = new_params.pop("max_tokens")
         return new_params
 
-    async def _build_payload(self, prompt: str, image_base64: str = None, image_format: str = None) -> dict:
+    async def _build_payload(self, prompt: str, image_base64: str = None) -> dict:
         """构建请求体"""
         # 复制一份参数，避免直接修改 self.params
         params_copy = await self._transform_parameters(self.params)
@@ -308,7 +306,7 @@ class LLM_request:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": f"data:image/{image_format.lower()};base64,{image_base64}"}}
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
                         ]
                     }
                 ],
@@ -393,14 +391,13 @@ class LLM_request:
         )
         return content, reasoning_content
 
-    async def generate_response_for_image(self, prompt: str, image_base64: str, image_format: str) -> Tuple[str, str]:
+    async def generate_response_for_image(self, prompt: str, image_base64: str) -> Tuple[str, str]:
         """根据输入的提示和图片生成模型的异步响应"""
 
         content, reasoning_content = await self._execute_request(
             endpoint="/chat/completions",
             prompt=prompt,
-            image_base64=image_base64,
-            image_format=image_format
+            image_base64=image_base64
         )
         return content, reasoning_content
 

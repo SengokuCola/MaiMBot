@@ -4,8 +4,6 @@ import time
 import aiohttp
 import hashlib
 from typing import Optional, Union
-from PIL import Image
-import io
 
 from loguru import logger
 from nonebot import get_driver
@@ -121,7 +119,6 @@ class ImageManager:
                     
             # 计算哈希值
             image_hash = hashlib.md5(image_bytes).hexdigest()
-            image_format = Image.open(io.BytesIO(image_bytes)).format.lower()
             
             # 查重
             existing = self.db.images.find_one({'hash': image_hash})
@@ -130,7 +127,7 @@ class ImageManager:
                 
             # 生成文件名和路径
             timestamp = int(time.time())
-            filename = f"{timestamp}_{image_hash[:8]}.{image_format}"
+            filename = f"{timestamp}_{image_hash[:8]}.jpg"
             file_path = os.path.join(self.IMAGE_DIR, filename)
             
             # 保存文件
@@ -241,8 +238,7 @@ class ImageManager:
             # 计算图片哈希
             image_bytes = base64.b64decode(image_base64)
             image_hash = hashlib.md5(image_bytes).hexdigest()
-            image_format = Image.open(io.BytesIO(image_bytes)).format.lower()
-
+            
             # 查询缓存的描述
             cached_description = self._get_description_from_db(image_hash, 'emoji')
             if cached_description:
@@ -251,13 +247,13 @@ class ImageManager:
 
             # 调用AI获取描述
             prompt = "这是一个表情包，使用中文简洁的描述一下表情包的内容和表情包所表达的情感"
-            description, _ = await self._llm.generate_response_for_image(prompt, image_base64, image_format)
+            description, _ = await self._llm.generate_response_for_image(prompt, image_base64)
             
             # 根据配置决定是否保存图片
             if global_config.EMOJI_SAVE:
                 # 生成文件名和路径
                 timestamp = int(time.time())
-                filename = f"{timestamp}_{image_hash[:8]}.{image_format}"
+                filename = f"{timestamp}_{image_hash[:8]}.jpg"
                 file_path = os.path.join(self.IMAGE_DIR, 'emoji',filename)
                 
                 try:
@@ -297,8 +293,7 @@ class ImageManager:
             # 计算图片哈希
             image_bytes = base64.b64decode(image_base64)
             image_hash = hashlib.md5(image_bytes).hexdigest()
-            image_format = Image.open(io.BytesIO(image_bytes)).format.lower()
-
+            
             # 查询缓存的描述
             cached_description = self._get_description_from_db(image_hash, 'image')
             if cached_description:
@@ -307,7 +302,7 @@ class ImageManager:
 
             # 调用AI获取描述
             prompt = "请用中文描述这张图片的内容。如果有文字，请把文字都描述出来。并尝试猜测这个图片的含义。最多200个字。"
-            description, _ = await self._llm.generate_response_for_image(prompt, image_base64, image_format)
+            description, _ = await self._llm.generate_response_for_image(prompt, image_base64)
             
             print(f"描述是{description}")
             
@@ -319,7 +314,7 @@ class ImageManager:
             if global_config.EMOJI_SAVE:
                 # 生成文件名和路径
                 timestamp = int(time.time())
-                filename = f"{timestamp}_{image_hash[:8]}.{image_format}"
+                filename = f"{timestamp}_{image_hash[:8]}.jpg"
                 file_path = os.path.join(self.IMAGE_DIR,'image', filename)
                 
                 try:

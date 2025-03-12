@@ -135,7 +135,7 @@ class ChatBot:
         for pattern in global_config.ban_msgs_regex:
             if re.search(pattern, message.raw_message):
                 logger.info(
-                    f"[{chat.group_info.group_name if chat.group_info.group_id else '私聊'}]{userinfo.user_nickname}:{message.raw_message}"
+                    f"[{chat.group_info.group_name if chat.group_info.group_id else '私聊'}]{message.user_nickname}:{message.raw_message}"
                 )
                 logger.info(f"[正则表达式过滤]消息匹配到{pattern}，filtered")
                 return
