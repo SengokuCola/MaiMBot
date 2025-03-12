@@ -293,7 +293,7 @@ class ImageManager:
     async def get_image_description(self, image_base64: str) -> str:
         """获取普通图片描述，带查重和保存功能"""
         try:
-            print("处理图片中")
+            logger.info("处理图片中")
             # 计算图片哈希
             image_bytes = base64.b64decode(image_base64)
             image_hash = hashlib.md5(image_bytes).hexdigest()
@@ -302,14 +302,14 @@ class ImageManager:
             # 查询缓存的描述
             cached_description = self._get_description_from_db(image_hash, 'image')
             if cached_description:
-                print("图片描述缓存中")
+                logger.info("图片描述缓存中")
                 return f"[图片：{cached_description}]"
 
             # 调用AI获取描述
             prompt = "请用中文描述这张图片的内容。如果有文字，请把文字都描述出来。并尝试猜测这个图片的含义。最多200个字。"
             description, _ = await self._llm.generate_response_for_image(prompt, image_base64, image_format)
             
-            print(f"描述是{description}")
+            logger.info(f"描述是{description}")
             
             if description is None:
                 logger.warning("AI未能生成图片描述")

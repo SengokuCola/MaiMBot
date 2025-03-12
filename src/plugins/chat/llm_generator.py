@@ -194,7 +194,7 @@ class ResponseGenerator:
                 return ["neutral"]
 
         except Exception as e:
-            print(f"获取情感标签时出错: {e}")
+            logger.error(f"获取情感标签时出错: {e}")
             return ["neutral"]
 
     async def _process_response(self, content: str) -> Tuple[List[str], List[str]]:
