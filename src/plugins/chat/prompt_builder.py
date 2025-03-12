@@ -20,7 +20,7 @@ def choose_personality():
     i_person = 0
     for i_person, probability in enumerate(probabilities):
         choice_base += probability
-        if personality_choice < probability:
+        if personality_choice < choice_base:
             break
     if i_person < len(personality):
         logger.info(f"正在用人格{i_person + 1}回答")
