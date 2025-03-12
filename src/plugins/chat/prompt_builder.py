@@ -16,12 +16,11 @@ def choose_personality():
     personality = global_config.PROMPT_PERSONALITY
     probabilities = global_config.PERSONALITIES
     personality_choice = random.random()
-    choice_base = 0.0
     i_person = 0
     for i_person, probability in enumerate(probabilities):
-        choice_base += probability
-        if personality_choice < choice_base:
+        if personality_choice < personality_choice:
             break
+        personality_choice -= probability
     if i_person < len(personality):
         logger.info(f"正在用人格{i_person + 1}回答")
     else:
