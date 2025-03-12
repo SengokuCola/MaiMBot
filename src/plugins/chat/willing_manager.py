@@ -44,6 +44,12 @@ class WillingManager:
         
         current_willing = self.chat_reply_willing.get(chat_id, 0)
         
+        if current_willing <0.25:
+            current_willing += 0.03
+        
+        if current_willing <0.15:
+            current_willing = 0.15
+
         # print(f"初始意愿: {current_willing}")
         if is_mentioned_bot and current_willing < 1.0:
             current_willing += 0.9
