@@ -359,8 +359,8 @@ class BotConfig:
             config.min_group_reply_possibility = reply_possibility_enhance_config.get(
                 "min_group_reply_possibility", config.min_group_reply_possibility
             )
-            config.min_group_reply_possibility = reply_possibility_enhance_config.get(
-                "min_group_reply_possibility", config.min_group_reply_possibility
+            config.min_friend_reply_possibility = reply_possibility_enhance_config.get(
+                "min_friend_reply_possibility", config.min_friend_reply_possibility
             )
             config.max_group_reply_possibility = reply_possibility_enhance_config.get(
                 "max_group_reply_possibility", config.max_group_reply_possibility
