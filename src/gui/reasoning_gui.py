@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Dict, List
 from loguru import logger
 from typing import Optional
-from pymongo import MongoClient
+from ..common.database import Database
 
 import customtkinter as ctk
 from dotenv import load_dotenv
@@ -27,38 +27,6 @@ elif os.path.exists(os.path.join(root_dir, '.env.prod')):
 else:
     logger.error("未找到环境配置文件")
     sys.exit(1)
-
-
-class Database:
-    _instance: Optional["Database"] = None
-
-    def __init__(self, host: str, port: int, db_name: str, username: str = None, password: str = None,
-                 auth_source: str = None):
-        if username and password:
-            self.client = MongoClient(
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-                authSource=auth_source or 'admin'
-            )
-        else:
-            self.client = MongoClient(host, port)
-        self.db = self.client[db_name]
-
-    @classmethod
-    def initialize(cls, host: str, port: int, db_name: str, username: str = None, password: str = None,
-                   auth_source: str = None) -> "Database":
-        if cls._instance is None:
-            cls._instance = cls(host, port, db_name, username, password, auth_source)
-        return cls._instance
-
-    @classmethod
-    def get_instance(cls) -> "Database":
-        if cls._instance is None:
-            raise RuntimeError("Database not initialized")
-        return cls._instance
-
 
 class ReasoningGUI:
     def __init__(self):
@@ -83,11 +51,19 @@ class ReasoningGUI:
         except RuntimeError:
             logger.warning("数据库未初始化，正在尝试初始化...")
             try:
-                Database.initialize("127.0.0.1", 27017, "maimai_bot")
+                Database.initialize(
+                    uri=os.getenv("MONGODB_URI"),
+                    host=os.getenv("MONGODB_HOST", "127.0.0.1"),
+                    port=int(os.getenv("MONGODB_PORT", "27017")),
+                    db_name=os.getenv("DATABASE_NAME", "MegBot"),
+                    username=os.getenv("MONGODB_USERNAME"),
+                    password=os.getenv("MONGODB_PASSWORD"),
+                    auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
+                )
                 self.db = Database.get_instance().db
                 logger.success("数据库初始化成功")
             except Exception:
-                logger.exception(f"数据库初始化失败")
+                logger.exception("数据库初始化失败")
                 sys.exit(1)
 
         # 存储群组数据
@@ -342,7 +318,7 @@ class ReasoningGUI:
                             'group_id': self.selected_group_id
                         })
             except Exception:
-                logger.exception(f"自动更新出错")
+                logger.exception("自动更新出错")
 
             # 每5秒更新一次
             time.sleep(5)
@@ -359,12 +335,13 @@ class ReasoningGUI:
 def main():
     """主函数"""
     Database.initialize(
-        host=os.getenv("MONGODB_HOST"),
-        port=int(os.getenv("MONGODB_PORT")),
-        db_name=os.getenv("DATABASE_NAME"),
+        uri=os.getenv("MONGODB_URI"),
+        host=os.getenv("MONGODB_HOST", "127.0.0.1"),
+        port=int(os.getenv("MONGODB_PORT", "27017")),
+        db_name=os.getenv("DATABASE_NAME", "MegBot"),
         username=os.getenv("MONGODB_USERNAME"),
         password=os.getenv("MONGODB_PASSWORD"),
-        auth_source=os.getenv("MONGODB_AUTH_SOURCE")
+        auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
     )
 
     app = ReasoningGUI()

@@ -1,6 +1,7 @@
 # 📦 Linux系统如何手动部署MaiMbot麦麦？
 
 ## 准备工作
+
 - 一台联网的Linux设备（本教程以Ubuntu/Debian系为例）
 - QQ小号（QQ框架的使用可能导致qq被风控，严重（小概率）可能会导致账号封禁，强烈不推荐使用大号）
 - 可用的大模型API
@@ -20,6 +21,7 @@
 - 数据库是什么？如何安装并启动MongoDB
 
 - 如何运行一个QQ机器人，以及NapCat框架是什么
+
 ---
 
 ## 环境配置
@@ -33,7 +35,9 @@ python --version
 # 或
 python3 --version
 ```
+
 如果版本低于3.9，请更新Python版本。
+
 ```bash
 # Ubuntu/Debian
 sudo apt update
@@ -45,6 +49,7 @@ sudo update-alternatives --config python3
 ```
 
 ### 2️⃣ **创建虚拟环境**
+
 ```bash
 # 方法1：使用venv(推荐)
 python3 -m venv maimbot
@@ -65,32 +70,37 @@ pip install -r requirements.txt
 ---
 
 ## 数据库配置
-### 3️⃣ **安装并启动MongoDB**
-- 安装与启动：Debian参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)，Ubuntu参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
 
+### 3️⃣ **安装并启动MongoDB**
+
+- 安装与启动：Debian参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)，Ubuntu参考[官方文档](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
 - 默认连接本地27017端口
+
 ---
 
 ## NapCat配置
+
 ### 4️⃣ **安装NapCat框架**
 
 - 参考[NapCat官方文档](https://www.napcat.wiki/guide/boot/Shell#napcat-installer-linux%E4%B8%80%E9%94%AE%E4%BD%BF%E7%94%A8%E8%84%9A%E6%9C%AC-%E6%94%AF%E6%8C%81ubuntu-20-debian-10-centos9)安装
 
--  使用QQ小号登录，添加反向WS地址：
-`ws://127.0.0.1:8080/onebot/v11/ws`
+-  使用QQ小号登录，添加反向WS地址: `ws://127.0.0.1:8080/onebot/v11/ws`
 
 ---
 
 ## 配置文件设置
+
 ### 5️⃣ **配置文件设置，让麦麦Bot正常工作**
+
 - 修改环境配置文件：`.env.prod`
 - 修改机器人配置文件：`bot_config.toml`
-
 
 ---
 
 ## 启动机器人
+
 ### 6️⃣ **启动麦麦机器人**
+
 ```bash
 # 在项目目录下操作
 nb run
@@ -100,16 +110,69 @@ python3 bot.py
 
 ---
 
-## **其他组件(可选)**
-- 直接运行 knowledge.py生成知识库
+### 7️⃣ **使用systemctl管理maimbot**
 
+使用以下命令添加服务文件：
+
+```bash
+sudo nano /etc/systemd/system/maimbot.service
+```
+
+输入以下内容：
+
+`<maimbot_directory>`：你的maimbot目录
+`<venv_directory>`：你的venv环境（就是上文创建环境后，执行的代码`source maimbot/bin/activate`中source后面的路径的绝对路径）
+
+```ini
+[Unit]
+Description=MaiMbot 麦麦
+After=network.target mongod.service
+
+[Service]
+Type=simple
+WorkingDirectory=<maimbot_directory>
+ExecStart=<venv_directory>/python3 bot.py
+ExecStop=/bin/kill -2 $MAINPID
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+输入以下命令重新加载systemd：
+
+```bash
+sudo systemctl daemon-reload
+```
+
+启动并设置开机自启：
+
+```bash
+sudo systemctl start maimbot
+sudo systemctl enable maimbot
+```
+
+输入以下命令查看日志：
+
+```bash
+sudo journalctl -xeu maimbot
+```
+
+---
+
+## **其他组件(可选)**
+
+- 直接运行 knowledge.py生成知识库
 
 ---
 
 ## 常见问题
+
 🔧 权限问题：在命令前加`sudo`  
 🔌 端口占用：使用`sudo lsof -i :8080`查看端口占用  
 🛡️ 防火墙：确保8080/27017端口开放  
+
 ```bash
 sudo ufw allow 8080/tcp
 sudo ufw allow 27017/tcp

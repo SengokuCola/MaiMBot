@@ -155,7 +155,7 @@ class LLMStatistics:
                 all_stats = self._collect_all_statistics()
                 self._save_statistics(all_stats)
             except Exception:
-                logger.exception(f"统计数据处理失败")
+                logger.exception("统计数据处理失败")
             
             # 等待1分钟
             for _ in range(60):

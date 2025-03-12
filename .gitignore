@@ -1,4 +1,5 @@
 data/
+data1/
 mongodb/
 NapCat.Framework.Windows.Once/
 log/
@@ -193,9 +194,8 @@ cython_debug/
 # jieba
 jieba.cache
 
-
-# vscode
-/.vscode
+# .vscode
+!.vscode/settings.json
 
 # direnv
 /.direnv

@@ -128,13 +128,17 @@ if __name__ == "__main__":
     )
     os.system("cls")
     if choice == "1":
-        install_napcat()
-        install_mongodb()
+        confirm = input("首次安装将下载并配置所需组件\n1.确认\n2.取消\n")
+        if confirm == "1":
+            install_napcat()
+            install_mongodb()
+        else:
+            print("已取消安装")
     elif choice == "2":
         run_maimbot()
-        choice = input("是否启动推理可视化？（y/N）").upper()
+        choice = input("是否启动推理可视化？（未完善）（y/N）").upper()
         if choice == "Y":
             run_cmd(r"python src\gui\reasoning_gui.py")
-        choice = input("是否启动记忆可视化？（y/N）").upper()
+        choice = input("是否启动记忆可视化？（未完善）（y/N）").upper()
         if choice == "Y":
             run_cmd(r"python src/plugins/memory_system/memory_manual_build.py")
