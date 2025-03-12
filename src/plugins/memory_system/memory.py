@@ -44,8 +44,18 @@ class Memory_graph:
                           created_time=current_time,  # 添加创建时间
                           last_modified=current_time) # 添加最后修改时间
 
-    def add_dot(self, concept, memory):
+    def add_dot(self, concept, memory, group_id=None):
         current_time = datetime.datetime.now().timestamp()
+        
+        # 如果memory不是字典格式，将其转换为字典
+        if not isinstance(memory, dict):
+            memory = {
+                'content': memory,
+                'group_id': group_id
+            }
+        # 如果memory是字典但没有group_id，添加group_id
+        elif 'group_id' not in memory and group_id is not None:
+            memory['group_id'] = group_id
         
         if concept in self.G:
             if 'memory_items' in self.G.nodes[concept]:
@@ -218,6 +228,13 @@ class Hippocampus:
         if not messages:
             return set(), {}
 
+        # 提取群聊ID信息
+        group_id = None
+        for msg in messages:
+            if 'group_id' in msg and msg['group_id']:
+                group_id = msg['group_id']
+                break
+
         # 合并消息文本，同时保留时间信息
         input_text = ""
         time_info = ""
@@ -267,7 +284,13 @@ class Hippocampus:
         for topic, task in tasks:
             response = await task
             if response:
-                compressed_memory.add((topic, response[0]))
+                # 使用字典结构存储记忆内容与群组ID
+                memory_content = {
+                    'content': response[0],
+                    'group_id': group_id
+                }
+                compressed_memory.add((topic, memory_content))
+                
                 # 为每个话题查找相似的已存在主题
                 existing_topics = list(self.memory_graph.G.nodes())
                 similar_topics = []
@@ -315,6 +338,11 @@ class Hippocampus:
             bar = '█' * filled_length + '-' * (bar_length - filled_length)
             logger.debug(f"进度: [{bar}] {progress:.1f}% ({i}/{len(memory_samples)})")
 
+            # 获取该批次消息的group_id
+            group_id = None
+            if messages and len(messages) > 0 and 'group_id' in messages[0]:
+                group_id = messages[0]['group_id']
+
             compress_rate = global_config.memory_compress_rate
             compressed_memory, similar_topics_dict = await self.memory_compress(messages, compress_rate)
             logger.info(f"压缩后记忆数量: {len(compressed_memory)}，似曾相识的话题: {len(similar_topics_dict)}")
@@ -323,7 +351,7 @@ class Hippocampus:
             
             for topic, memory in compressed_memory:
                 logger.info(f"添加节点: {topic}")
-                self.memory_graph.add_dot(topic, memory)
+                self.memory_graph.add_dot(topic, memory, group_id)
                 all_topics.append(topic)
                 
                 # 连接相似的已存在主题
@@ -841,7 +869,7 @@ class Hippocampus:
         return activation
 
     async def get_relevant_memories(self, text: str, max_topics: int = 5, similarity_threshold: float = 0.4,
-                                    max_memory_num: int = 5) -> list:
+                                    max_memory_num: int = 5, group_id: str = None) -> list:
         """根据输入文本获取相关的记忆内容"""
         # 识别主题
         identified_topics = await self._identify_topics(text)
@@ -865,15 +893,29 @@ class Hippocampus:
                 # 如果记忆条数超过限制，随机选择指定数量的记忆
                 if len(first_layer) > max_memory_num / 2:
                     first_layer = random.sample(first_layer, max_memory_num // 2)
+                
                 # 为每条记忆添加来源主题和相似度信息
                 for memory in first_layer:
-                    relevant_memories.append({
-                        'topic': topic,
-                        'similarity': score,
-                        'content': memory
-                    })
+                    # 添加群聊ID筛选
+                    # 如果memory是字典格式且有群组信息，则进行过滤
+                    if isinstance(memory, dict) and 'group_id' in memory:
+                        # 当前没有指定群聊ID或者记忆来自相同群聊时才添加
+                        if group_id is None or memory['group_id'] == group_id:
+                            relevant_memories.append({
+                                'topic': topic,
+                                'similarity': score,
+                                'content': memory['content'] if 'content' in memory else memory,
+                                'group_id': memory.get('group_id')
+                            })
+                    else:
+                        # 对于没有群组信息的旧记忆，保持向后兼容
+                        relevant_memories.append({
+                            'topic': topic,
+                            'similarity': score,
+                            'content': memory,
+                            'group_id': None  # 旧数据没有群组信息
+                        })
 
-        # 如果记忆数量超过5个,随机选择5个
         # 按相似度排序
         relevant_memories.sort(key=lambda x: x['similarity'], reverse=True)
 
@@ -881,6 +923,34 @@ class Hippocampus:
             relevant_memories = random.sample(relevant_memories, max_memory_num)
 
         return relevant_memories
+
+    def get_group_memories(self, group_id: str) -> list:
+        """获取特定群聊的所有记忆
+        
+        Args:
+            group_id: 群聊ID
+            
+        Returns:
+            list: 该群聊的记忆列表，每个记忆包含主题和内容
+        """
+        all_memories = []
+        all_nodes = list(self.memory_graph.G.nodes(data=True))
+        
+        for concept, data in all_nodes:
+            memory_items = data.get('memory_items', [])
+            if not isinstance(memory_items, list):
+                memory_items = [memory_items] if memory_items else []
+                
+            # 筛选出属于指定群聊的记忆
+            for memory in memory_items:
+                if isinstance(memory, dict) and 'group_id' in memory and memory['group_id'] == group_id:
+                    # 添加到结果列表
+                    all_memories.append({
+                        'topic': concept,
+                        'content': memory.get('content', str(memory))
+                    })
+        
+        return all_memories
 
 
 def segment_text(text):
