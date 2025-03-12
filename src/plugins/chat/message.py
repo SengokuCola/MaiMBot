@@ -2,6 +2,8 @@ import time
 import html
 import re
 import json
+from random import random
+from .config import global_config
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
@@ -96,7 +98,8 @@ class MessageRecv(Message):
         self.processed_plain_text = ""  # 初始化为空字符串
         self.detailed_plain_text = ""   # 初始化为空字符串
         self.is_emoji=False
-    
+        self.is_ignore=False
+        
     
     def update_chat_stream(self,chat_stream:ChatStream):
         self.chat_stream=chat_stream
@@ -146,8 +149,10 @@ class MessageRecv(Message):
                 return seg.data
             elif seg.type == "image":
                 # 如果是base64图片数据
-                if isinstance(seg.data, str):
+                if isinstance(seg.data, str) and random() < global_config.handle_image:
                     return await image_manager.get_image_description(seg.data)
+                else:
+                    self.is_ignore = True
                 return "[图片]"
             elif seg.type == "emoji":
                 self.is_emoji = True
