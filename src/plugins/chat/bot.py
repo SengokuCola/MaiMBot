@@ -122,6 +122,9 @@ class ChatBot:
         await relationship_manager.update_relationship_value(chat_stream=chat, relationship_value=0.5)
 
         await message.process()
+        # 忽略图片处理
+        if message.is_ignore:
+            return
         # 过滤词
         for word in global_config.ban_words:
             if word in message.processed_plain_text:
