@@ -91,10 +91,8 @@ class BotConfig:
 
     PROMPT_SCHEDULE_GEN = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
 
-    PERSONALITY_1: float = 0.6  # 第一种人格概率
-    PERSONALITY_2: float = 0.3  # 第二种人格概率
-    PERSONALITY_3: float = 0.1  # 第三种人格概率
-    
+    PERSONALITIES = [0.6, 0.3, 0.1]  # 归一化人格概率
+
     build_memory_interval: int = 600  # 记忆构建间隔（秒）
     
     forget_memory_interval: int = 600  # 记忆遗忘间隔（秒）
@@ -178,9 +176,17 @@ class BotConfig:
             config.PROMPT_SCHEDULE_GEN = personality_config.get("prompt_schedule", config.PROMPT_SCHEDULE_GEN)
 
             if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
-                config.PERSONALITY_1 = personality_config.get("personality_1_probability", config.PERSONALITY_1)
-                config.PERSONALITY_2 = personality_config.get("personality_2_probability", config.PERSONALITY_2)
-                config.PERSONALITY_3 = personality_config.get("personality_3_probability", config.PERSONALITY_3)
+                ps = []
+                i = 1
+                while True:
+                    p = personality_config.get(f"personality_{i}_probability")
+                    if p is None:
+                        break
+                    ps.append(p)
+                    i += 1
+                if ps:
+                    p_sum = sum(ps)
+                    config.PERSONALITIES = [p / p_sum for p in ps]
 
         def emoji(parent: dict):
             emoji_config = parent["emoji"]
