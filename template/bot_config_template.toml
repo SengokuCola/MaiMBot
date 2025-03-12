@@ -1,5 +1,5 @@
 [inner]
-version = "0.0.8"
+version = "0.0.9"
 
 #如果你想要修改配置文件，请在修改后将version的值进行变更
 #如果新增项目，请在BotConfig类下新增相应的变量
@@ -107,6 +107,14 @@ enable_advance_output = true # 是否启用高级输出
 enable_kuuki_read = true # 是否启用读空气功能
 enable_debug_output = false # 是否启用调试输出
 enable_friend_chat = false # 是否启用好友聊天
+
+[reply_possibility_enhance]
+enable = true # 是否启用回复可能性增强
+minumum_group_reply_possibility = 0 # 最低群组回复可能性
+minumum_friend_reply_possibility = 0.5 # 最低好友回复可能性
+max_group_reply_possibility = 1.0 # 最大回复可能性
+max_friend_reply_possibility = 1.0 # 最大回复可能性
+
 
 [groups]
 talk_allowed = [

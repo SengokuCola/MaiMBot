@@ -37,7 +37,6 @@ class BotConfig:
 
     ban_user_id = set()
 
-    
     EMOJI_CHECK_INTERVAL: int = 120  # 表情包检查间隔（分钟）
     EMOJI_REGISTER_INTERVAL: int = 10  # 表情包注册间隔（分钟）
     EMOJI_SAVE: bool = True  # 偷表情包
@@ -76,11 +75,17 @@ class BotConfig:
 
     keywords_reaction_rules = []  # 关键词回复规则
 
-    chinese_typo_enable = True  # 是否启用中文错别字生成器
-    chinese_typo_error_rate = 0.03  # 单字替换概率
-    chinese_typo_min_freq = 7  # 最小字频阈值
-    chinese_typo_tone_error_rate = 0.2  # 声调错误概率
-    chinese_typo_word_replace_rate = 0.02  # 整词替换概率
+    chinese_typo_enable: bool = True  # 是否启用中文错别字生成器
+    chinese_typo_error_rate: float = 0.03  # 单字替换概率
+    chinese_typo_min_freq: float = 7  # 最小字频阈值
+    chinese_typo_tone_error_rate: float = 0.2  # 声调错误概率
+    chinese_typo_word_replace_rate: float = 0.02  # 整词替换概率
+
+    reply_possibility_enhance_enable: bool = True  # 是否启用回复可能性增强
+    minumum_group_reply_possibility = 0  # 最低群组回复可能性
+    minumum_friend_reply_possibility = 0.5  # 最低好友回复可能性
+    max_group_reply_possibility = 1.0  # 最大回复可能性
+    max_friend_reply_possibility = 1.0  # 最大回复可能性
 
     # 默认人设
     PROMPT_PERSONALITY = [
@@ -94,9 +99,9 @@ class BotConfig:
     PERSONALITY_1: float = 0.6  # 第一种人格概率
     PERSONALITY_2: float = 0.3  # 第二种人格概率
     PERSONALITY_3: float = 0.1  # 第三种人格概率
-    
+
     build_memory_interval: int = 600  # 记忆构建间隔（秒）
-    
+
     forget_memory_interval: int = 600  # 记忆遗忘间隔（秒）
     memory_forget_time: int = 24  # 记忆遗忘时间（小时）
     memory_forget_percentage: float = 0.01  # 记忆遗忘比例
@@ -287,7 +292,7 @@ class BotConfig:
                     "response_interested_rate_amplifier", config.response_interested_rate_amplifier
                 )
                 config.down_frequency_rate = msg_config.get("down_frequency_rate", config.down_frequency_rate)
-            
+
             if config.INNER_VERSION in SpecifierSet(">=0.0.6"):
                 config.ban_msgs_regex = msg_config.get("ban_msgs_regex", config.ban_msgs_regex)
 
@@ -299,10 +304,12 @@ class BotConfig:
             # 在版本 >= 0.0.4 时才处理新增的配置项
             if config.INNER_VERSION in SpecifierSet(">=0.0.4"):
                 config.memory_ban_words = set(memory_config.get("memory_ban_words", []))
-                
+
             if config.INNER_VERSION in SpecifierSet(">=0.0.7"):
                 config.memory_forget_time = memory_config.get("memory_forget_time", config.memory_forget_time)
-                config.memory_forget_percentage = memory_config.get("memory_forget_percentage", config.memory_forget_percentage)
+                config.memory_forget_percentage = memory_config.get(
+                    "memory_forget_percentage", config.memory_forget_percentage
+                )
                 config.memory_compress_rate = memory_config.get("memory_compress_rate", config.memory_compress_rate)
 
         def mood(parent: dict):
@@ -342,6 +349,24 @@ class BotConfig:
                 config.enable_debug_output = others_config.get("enable_debug_output", config.enable_debug_output)
                 config.enable_friend_chat = others_config.get("enable_friend_chat", config.enable_friend_chat)
 
+        def reply_possibility_enhance(parent: dict):
+            reply_possibility_enhance_config = parent["reply_possibility_enhance"]
+            config.reply_possibility_enhance_enable = reply_possibility_enhance_config.get(
+                "enable", config.reply_possibility_enhance_config_enable
+            )
+            config.minumum_group_reply_possibility = reply_possibility_enhance_config.get(
+                "minumum_group_reply_possibility", config.minumum_group_reply_possibility 
+            )
+            config.minumum_friend_reply_possibility = reply_possibility_enhance_config.get(
+                "minumum_friend_reply_possibility", config.minumum_friend_reply_possibility 
+            )
+            config.max_group_reply_possibility = reply_possibility_enhance_config.get(
+                "max_group_reply_possibility", config.max_group_reply_possibility
+            )
+            config.max_friend_reply_possibility = reply_possibility_enhance_config.get(
+                "max_friend_reply_possibility", config.max_friend_reply_possibility 
+            )
+
         # 版本表达式：>=1.0.0,<2.0.0
         # 允许字段：func: method, support: str, notice: str, necessary: bool
         # 如果使用 notice 字段，在该组配置加载时，会展示该字段对用户的警示
@@ -361,6 +386,7 @@ class BotConfig:
             "chinese_typo": {"func": chinese_typo, "support": ">=0.0.3", "necessary": False},
             "groups": {"func": groups, "support": ">=0.0.0"},
             "others": {"func": others, "support": ">=0.0.0"},
+            "reply_possibility_enhance": {"func": reply_possibility_enhance, "support": ">=0.0.9", "necessary": False},
         }
 
         # 原地修改，将 字符串版本表达式 转换成 版本对象
@@ -435,7 +461,7 @@ global_config = BotConfig.load_config(config_path=bot_config_path)
 
 if not global_config.enable_advance_output:
     logger.remove()
-    
+
 # 调试输出功能
 if global_config.enable_debug_output:
     logger.remove()
