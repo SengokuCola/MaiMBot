@@ -91,9 +91,14 @@ class BotConfig:
 
     PROMPT_SCHEDULE_GEN = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
 
-    PERSONALITY_1: float = 0.6  # 第一种人格概率
-    PERSONALITY_2: float = 0.3  # 第二种人格概率
-    PERSONALITY_3: float = 0.1  # 第三种人格概率
+    # 人设概率默认配置（总和应为1）
+    PERSONALITY_PROBS: List[float] = field(
+        default_factory = lambda: [
+            0.6,  # 第一种人格概率
+            0.3,  # 第二种人格概率
+            0.1  # 第三种人格概率
+        ]
+    )  # 人格概率分布
     
     build_memory_interval: int = 600  # 记忆构建间隔（秒）
     
@@ -171,16 +176,23 @@ class BotConfig:
         def personality(parent: dict):
             personality_config = parent["personality"]
             personality = personality_config.get("prompt_personality")
-            if len(personality) >= 2:
-                logger.debug(f"载入自定义人格:{personality}")
+            if config.INNER_VERSION in SpecifierSet(">=0.0.9") or len(personality) >= 2:
+                logger.debug(f"载入自定义人格:{personality_config.get('prompt_personality', config.PROMPT_PERSONALITY)}")
                 config.PROMPT_PERSONALITY = personality_config.get("prompt_personality", config.PROMPT_PERSONALITY)
             logger.info(f"载入自定义日程prompt:{personality_config.get('prompt_schedule', config.PROMPT_SCHEDULE_GEN)}")
             config.PROMPT_SCHEDULE_GEN = personality_config.get("prompt_schedule", config.PROMPT_SCHEDULE_GEN)
 
-            if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
-                config.PERSONALITY_1 = personality_config.get("personality_1_probability", config.PERSONALITY_1)
-                config.PERSONALITY_2 = personality_config.get("personality_2_probability", config.PERSONALITY_2)
-                config.PERSONALITY_3 = personality_config.get("personality_3_probability", config.PERSONALITY_3)
+            if config.INNER_VERSION in SpecifierSet(">=0.0.9"):
+                config.PERSONALITY_PROBS = personality_config.get("personality_probs", config.PERSONALITY_PROBS)
+                if len(config.PERSONALITY_PROBS) != len(personality):
+                    logger.error("人格设定[prompt_personality]数量和人格概率[personality_probs]数量不相等，请检查")
+                    raise ValueError("人格设定[prompt_personality]数量和人格概率[personality_probs]数量不相等，，请检查")
+            elif config.INNER_VERSION in SpecifierSet(">=0.0.2"):
+                config.PERSONALITY_PROBS = [
+                    personality_config.get("personality_1_probability", 0.6),
+                    personality_config.get("personality_2_probability", 0.3),
+                    personality_config.get("personality_3_probability", 0.1)
+                ]
 
         def emoji(parent: dict):
             emoji_config = parent["emoji"]

@@ -1,5 +1,5 @@
 [inner]
-version = "0.0.8"
+version = "0.0.9"
 
 #如果你想要修改配置文件，请在修改后将version的值进行变更
 #如果新增项目，请在BotConfig类下新增相应的变量
@@ -23,9 +23,11 @@ prompt_personality = [
         "是一个女大学生，你有黑色头发，你会刷小红书",    # 小红书人格
         "是一个女大学生，你会刷b站，对ACG文化感兴趣"    # b站人格
     ]
-personality_1_probability = 0.6 # 第一种人格出现概率
-personality_2_probability = 0.3 # 第二种人格出现概率
-personality_3_probability = 0.1 # 第三种人格出现概率，请确保三个概率相加等于1
+personality_probs = [
+    0.6, # 第一种人格出现概率
+    0.3, # 第二种人格出现概率
+    0.1 # 第三种人格出现概率，请确保三个概率相加等于1
+]
 prompt_schedule = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
 
 [message]
