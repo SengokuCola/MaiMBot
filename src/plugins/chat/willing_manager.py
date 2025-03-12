@@ -1,5 +1,6 @@
 import asyncio
 from typing import Dict
+import datetime
 
 
 from .config import global_config
@@ -67,6 +68,74 @@ class WillingManager:
 
         current_willing *= global_config.response_willing_amplifier  # 放大回复意愿
         # print(f"放大系数_willing: {global_config.response_willing_amplifier}, 当前意愿: {current_willing}")
+
+        # 基于UTC时间调整回复意愿
+        if global_config.enable_utc_time_control:
+            current_utc_hour = datetime.datetime.utcnow().hour
+            
+            # 查找当前时间所在的时间段
+            current_period = None
+            for period in global_config.time_periods:
+                start_hour = period["start_hour"]
+                end_hour = period["end_hour"]
+                
+                # 检查当前时间是否在这个时间段内
+                if start_hour <= current_utc_hour < end_hour:
+                    current_period = period
+                    break
+            
+            # 如果找到当前时间所在的时间段，应用相应的回复意愿调整
+            if current_period:
+                start_hour = current_period["start_hour"]
+                end_hour = current_period["end_hour"]
+                mode = current_period["mode"]
+                
+                # 计算在时间段内的位置（0-1之间）
+                time_range = end_hour - start_hour
+                if time_range <= 0:  # 处理跨夜的情况
+                    time_range += 24
+                position = (current_utc_hour - start_hour) / time_range
+                
+                if mode == "decrease":
+                    # 逐渐降低意愿至0
+                    willing_factor = max(0, 1 - position)
+                    original_willing = current_willing
+                    current_willing *= willing_factor
+                    logger.debug(f"UTC时间{current_utc_hour}在降低时间段{start_hour}-{end_hour}内，位置{position:.2f}，意愿因子{willing_factor:.2f}，调整前意愿: {original_willing:.2f}，调整后意愿: {current_willing:.2f}")
+                
+                elif mode == "increase":
+                    # 从0逐渐恢复到配置值
+                    willing_factor = min(1, position)
+                    original_willing = current_willing
+                    # 这里可能需要根据上一个时间段的终点调整起始值
+                    # 如果上一个时间段结束于0，则从0开始提高
+                    current_willing *= willing_factor
+                    logger.debug(f"UTC时间{current_utc_hour}在提高时间段{start_hour}-{end_hour}内，位置{position:.2f}，意愿因子{willing_factor:.2f}，调整前意愿: {original_willing:.2f}，调整后意愿: {current_willing:.2f}")
+            else:
+                # 未找到当前时间的配置，需要确定延续哪个时间点的值
+                
+                # 找到最接近当前时间的时间段结束点
+                closest_period_end = None
+                min_hours_diff = 24
+                
+                for period in global_config.time_periods:
+                    end_hour = period["end_hour"]
+                    # 计算结束时间与当前时间的差距（考虑跨天）
+                    hours_diff = (current_utc_hour - end_hour) % 24
+                    
+                    if hours_diff < min_hours_diff:
+                        min_hours_diff = hours_diff
+                        closest_period_end = period
+                
+                if closest_period_end:
+                    mode = closest_period_end["mode"]
+                    # 如果最近的时间段是降低模式，那么当前回复意愿应为0
+                    if mode == "decrease":
+                        current_willing = 0
+                        logger.debug(f"UTC时间{current_utc_hour}不在任何配置时间段内，延续最近的降低时间段结束值，意愿设为0")
+                    # 如果最近的时间段是提高模式，保持原值不变（已经是global_config.response_willing_amplifier的值）
+                    else:
+                        logger.debug(f"UTC时间{current_utc_hour}不在任何配置时间段内，延续最近的提高时间段结束值，保持原意愿{current_willing:.2f}")
 
         reply_probability = max((current_willing - 0.45) * 2, 0)
 

@@ -1,7 +1,7 @@
 import os
 import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 import tomli
 from loguru import logger
@@ -34,6 +34,16 @@ class BotConfig:
     response_willing_amplifier: float = 1.0  # 回复意愿放大系数
     response_interested_rate_amplifier: float = 1.0  # 回复兴趣度放大系数
     down_frequency_rate: float = 3.5  # 降低回复频率的群组回复意愿降低系数
+
+    # UTC时间段内的回复意愿控制
+    enable_utc_time_control: bool = False  # 是否启用基于UTC时间的回复意愿控制
+    time_periods: List[Dict[str, Any]] = field(
+        default_factory=lambda: [
+            {"start_hour": 0, "end_hour": 6, "mode": "decrease"},
+            {"start_hour": 7, "end_hour": 9, "mode": "increase"},
+            {"start_hour": 10, "end_hour": 11, "mode": "decrease"}
+        ]
+    )  # 时间段配置列表，控制不同时间段的回复意愿变化
 
     ban_user_id = set()
 
@@ -296,6 +306,27 @@ class BotConfig:
             
             if config.INNER_VERSION in SpecifierSet(">=0.0.6"):
                 config.ban_msgs_regex = msg_config.get("ban_msgs_regex", config.ban_msgs_regex)
+                
+            if config.INNER_VERSION in SpecifierSet(">=0.0.10"):
+                config.enable_utc_time_control = msg_config.get("enable_utc_time_control", config.enable_utc_time_control)
+                config.time_periods = msg_config.get("time_periods", config.time_periods)
+                
+            # 为了兼容旧版本，在0.0.10版本保留旧的配置项，但在0.0.11版本后移除
+            if config.INNER_VERSION in SpecifierSet(">=0.0.10,<0.0.11") and "silent_time_start" in msg_config:
+                # 将旧的配置项转换为新的格式
+                config.time_periods = [
+                    {
+                        "start_hour": msg_config.get("silent_time_start", 0),
+                        "end_hour": msg_config.get("silent_time_end", 6),
+                        "mode": "decrease"
+                    },
+                    {
+                        "start_hour": msg_config.get("recovery_time_start", 6),
+                        "end_hour": msg_config.get("recovery_time_end", 12),
+                        "mode": "increase"
+                    }
+                ]
+                logger.warning("检测到旧版本的时间配置格式，已自动转换为新格式。请更新配置文件到最新版本。")
 
         def memory(parent: dict):
             memory_config = parent["memory"]
