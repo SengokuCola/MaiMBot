@@ -41,10 +41,10 @@ class LLM_request:
         """初始化数据库集合"""
         try:
             # 创建llm_usage集合的索引
-            self.db.llm_usage.create_index([("timestamp", 1)])
-            self.db.llm_usage.create_index([("model_name", 1)])
-            self.db.llm_usage.create_index([("user_id", 1)])
-            self.db.llm_usage.create_index([("request_type", 1)])
+            self.db.db.llm_usage.create_index([("timestamp", 1)])
+            self.db.db.llm_usage.create_index([("model_name", 1)])
+            self.db.db.llm_usage.create_index([("user_id", 1)])
+            self.db.db.llm_usage.create_index([("request_type", 1)])
         except Exception:
             logger.error("创建数据库索引失败")
 
@@ -73,7 +73,7 @@ class LLM_request:
                 "status": "success",
                 "timestamp": datetime.now()
             }
-            self.db.llm_usage.insert_one(usage_data)
+            self.db.db.llm_usage.insert_one(usage_data)
             logger.info(
                 f"Token使用情况 - 模型: {self.model_name}, "
                 f"用户: {user_id}, 类型: {request_type}, "
@@ -235,7 +235,7 @@ class LLM_request:
                                                 delta_content = ""
                                             accumulated_content += delta_content
                                             # 检测流式输出文本是否结束
-                                            finish_reason =  chunk["choices"][0].get("finish_reason")
+                                            finish_reason =  chunk["choices"][0]["finish_reason"]
                                             if finish_reason == "stop":
                                                 usage = chunk.get("usage", None)
                                                 if usage:

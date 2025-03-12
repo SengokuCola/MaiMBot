@@ -105,6 +105,11 @@ class BotConfig:
         default_factory=lambda: ["表情包", "图片", "回复", "聊天记录"]
     )  # 添加新的配置项默认值
 
+    # 记忆群组配置，用于定义私有记忆群组
+    # 格式：{"group1": ["123456", "234567"], "group2": ["345678", "456789"]}
+    # 每个群组内的群聊ID共享记忆，但不与其他群组共享
+    memory_private_groups: Dict[str, List[str]] = field(default_factory=dict)
+
     @staticmethod
     def get_config_dir() -> str:
         """获取配置文件目录"""
@@ -304,6 +309,11 @@ class BotConfig:
                 config.memory_forget_time = memory_config.get("memory_forget_time", config.memory_forget_time)
                 config.memory_forget_percentage = memory_config.get("memory_forget_percentage", config.memory_forget_percentage)
                 config.memory_compress_rate = memory_config.get("memory_compress_rate", config.memory_compress_rate)
+                
+            # 加载群组私有记忆配置
+            if "memory_private_groups" in memory_config:
+                config.memory_private_groups = memory_config.get("memory_private_groups", config.memory_private_groups)
+                logger.info(f"已加载群组私有记忆配置: {len(config.memory_private_groups)}个群组")
 
         def mood(parent: dict):
             mood_config = parent["mood"]

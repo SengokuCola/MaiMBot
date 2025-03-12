@@ -104,11 +104,20 @@ def get_cloest_chat_from_db(db, length: int, timestamp: str):
         # 转换记录格式
         formatted_records = []
         for record in chat_records:
-            formatted_records.append({
+            formatted_record = {
                 'time': record["time"],
                 'chat_id': record["chat_id"],
                 'detailed_plain_text': record.get("detailed_plain_text", "")  # 添加文本内容
-            })
+            }
+            
+            # 添加group_id信息，如果存在
+            if 'group_id' in record:
+                formatted_record['group_id'] = record['group_id']
+            elif 'chat_info' in record and 'group_info' in record['chat_info'] and record['chat_info']['group_info']:
+                # 从chat_info中提取group_id
+                formatted_record['group_id'] = record['chat_info']['group_info'].get('group_id')
+                
+            formatted_records.append(formatted_record)
             
         return formatted_records
             
@@ -406,10 +415,3 @@ def find_similar_topics_simple(text: str, topics: list, top_k: int = 5) -> list:
 
     # 按相似度降序排序并返回前k个
     return sorted(similarities, key=lambda x: x[1], reverse=True)[:top_k]
-
-
-def truncate_message(message: str, max_length=20) -> str:
-    """截断消息，使其不超过指定长度"""
-    if len(message) > max_length:
-        return message[:max_length] + "..."
-    return message
