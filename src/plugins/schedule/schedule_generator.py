@@ -93,7 +93,7 @@ class ScheduleGenerator:
             schedule_dict = json.loads(schedule_text)
             return schedule_dict
         except json.JSONDecodeError:
-            logger.exception("解析日程失败: {}".format(schedule_text))
+            #logger.exception("解析日程失败: {}".format(schedule_text))
             return False
 
     def _parse_time(self, time_str: str) -> str:

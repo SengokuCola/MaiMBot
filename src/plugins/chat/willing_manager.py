@@ -71,7 +71,7 @@ class WillingManager:
         current_willing *= global_config.response_willing_amplifier #放大回复意愿
         # print(f"放大系数_willing: {global_config.response_willing_amplifier}, 当前意愿: {current_willing}")
         
-        reply_probability = max((current_willing - 0.45) * 2, 0)
+        reply_probability = current_willing#max((current_willing - 0.45) * 2, 0)
         
         # 检查群组权限（如果是群聊）
         if chat_stream.group_info:                

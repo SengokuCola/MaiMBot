@@ -9,7 +9,7 @@ from nonebot.typing import T_State
 
 from ...common.database import Database
 from ..moods.moods import MoodManager  # 导入情绪管理器
-# from ..schedule.schedule_generator import bot_schedule
+from ..schedule.schedule_generator import bot_schedule
 from ..utils.statistic import LLMStatistics
 from .bot import chat_bot
 from .config import global_config
@@ -70,8 +70,8 @@ async def start_background_tasks():
 
     # 只启动表情包管理任务
     asyncio.create_task(emoji_manager.start_periodic_check(interval_MINS=global_config.EMOJI_CHECK_INTERVAL))
-#    await bot_schedule.initialize()
-#    bot_schedule.print_schedule()
+    await bot_schedule.initialize()
+    bot_schedule.print_schedule()
 
 
 @driver.on_startup
