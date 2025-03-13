@@ -19,10 +19,11 @@ from ..chat.utils import (
 )
 from ..models.utils_model import LLM_request
 
-from ..utils.logger_config import setup_logger, LogModule
+from ..utils.logger_config import LogClassification, LogModule
 
 # 配置日志
-logger = setup_logger(LogModule.MEMORY)
+log_module = LogModule()
+logger = log_module.setup_logger(LogClassification.MEMORY)
 
 logger.info("初始化记忆系统")
 

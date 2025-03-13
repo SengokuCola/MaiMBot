@@ -10,9 +10,9 @@ import uvicorn
 from dotenv import load_dotenv
 from nonebot.adapters.onebot.v11 import Adapter
 import platform
-from src.plugins.utils.logger_config import setup_logger
+from src.plugins.utils.logger_config import LogModule, LogClassification
 
-from loguru import logger
+#from loguru import logger
 
 # 配置日志格式
 
@@ -102,7 +102,9 @@ def load_env():
 
 
 def load_logger():
-    setup_logger()
+    global logger
+    log_module = LogModule()
+    logger = log_module.setup_logger(LogClassification.BASE)
 
 
 def scan_provider(env_config: dict):
@@ -174,8 +176,6 @@ def raw_main():
     if platform.system().lower() != "windows":
         time.tzset()
 
-    # 配置日志
-    load_logger()
     easter_egg()
     init_config()
     init_env()
@@ -207,6 +207,8 @@ def raw_main():
 
 if __name__ == "__main__":
     try:
+        # 配置日志，防止Exception无法使用logger
+        load_logger()
         raw_main()
 
         app = nonebot.get_asgi()
