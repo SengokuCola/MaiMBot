@@ -30,6 +30,7 @@ from .utils_user import get_user_nickname, get_user_cardname, get_groupname
 from .willing_manager import willing_manager  # 导入意愿管理器
 from .message_base import UserInfo, GroupInfo, Seg
 from ..utils.logger_config import setup_logger, LogModule
+from .daily_share_scheduler import DailyShareScheduler
 
 # 配置日志
 logger = setup_logger(LogModule.CHAT)
@@ -45,6 +46,7 @@ class ChatBot:
         self.mood_manager.start_mood_update()  # 启动情绪更新
 
         self.emoji_chance = 0.2  # 发送表情包的基础概率
+        self.daily_share_scheduler = DailyShareScheduler()
         # self.message_streams = MessageStreamContainer()
 
     async def _ensure_started(self):

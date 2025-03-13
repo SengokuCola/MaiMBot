@@ -243,3 +243,20 @@ class InitiativeMessageGenerate:
         content, reasoning = self.model_r1.generate_response_async(prompt)
         logger.debug(f"[DEBUG] {content} {reasoning}")
         return content
+
+
+class DailyMessageGenerate:
+    def __init__(self):
+        self.model_r1 = LLM_request(model=global_config.llm_reasoning, temperature=0.7)
+        self.model_v3 = LLM_request(model=global_config.llm_normal, temperature=0.7)
+        self.model_r1_distill = LLM_request(
+            model=global_config.llm_reasoning_minor, temperature=0.7
+        )
+
+    async def gen_response(self, message: Message):
+        prompt, prompt_template = (
+            prompt_builder._build_daily_prompt(message.message_info.group_info.group_id)
+        )
+        content, reasoning =await self.model_r1.generate_response_async(prompt)
+        # logger.debug(f"[DEBUG] {content} {reasoning}")
+        return content

@@ -319,5 +319,32 @@ class PromptBuilder:
         # 返回所有找到的内容，用换行分隔
         return '\n'.join(str(result['content']) for result in results)
 
+    def _build_daily_prompt(self, group_id, probability_1=0.8, probability_2=0.1):
+        current_date = time.strftime("%Y-%m-%d", time.localtime())
+        current_time = time.strftime("%H:%M:%S", time.localtime())
+        bot_schedule_now_time, bot_schedule_now_activity = bot_schedule.get_current_task()
+        prompt_date = f'''今天是{current_date}，现在是{current_time}，你今天的日程是：\n{bot_schedule.today_schedule}\n你现在正在{bot_schedule_now_activity}\n'''
+
+        # print(f"\033[1;34m[调试]\033[0m 已从数据库获取群 {group_id} 的消息记录:{chat_talking_prompt}")
+
+        # 激活prompt构建
+
+        personality = global_config.PROMPT_PERSONALITY
+        prompt_personality = ''
+        personality_choice = random.random()
+        if personality_choice < probability_1:  # 第一种人格
+            prompt_personality = f'''你的网名叫{global_config.BOT_NICKNAME}，{personality[0]}'''
+        elif personality_choice < probability_1 + probability_2:  # 第二种人格
+            prompt_personality = f'''你的网名叫{global_config.BOT_NICKNAME}，{personality[1]}'''
+        else:  # 第三种人格
+            prompt_personality = f'''你的网名叫{global_config.BOT_NICKNAME}，{personality[2]}'''
+
+        prompt_for_select = f"现在，根据你今天的日程，生成一条日常分享，讲述你的上一个日程是什么，在日程中发生了什么有意思的事情。注意，只需要输出日常分享，不要输出其他任何内容，不要在，也不要提到之后的日程是什么，字数不要超过50字。"
+
+        prompt_initiative_select = f"{prompt_date}\n{prompt_personality}\n{prompt_for_select}"
+        prompt_regular = f"{prompt_date}\n{prompt_personality}"
+
+        return prompt_initiative_select, prompt_regular
+
 
 prompt_builder = PromptBuilder()

@@ -4,7 +4,7 @@ import time
 from typing import Dict
 from loguru import logger
 
-
+from ...common.database import db
 from .config import global_config
 from .chat_stream import ChatStream
 
@@ -20,10 +20,12 @@ class WillingManager:
         self.chat_last_reply_time: Dict[str, float] = {}  # 存储每个聊天流上次回复的时间
         self.chat_last_sender_id: Dict[str, str] = {}  # 存储每个聊天流上次回复的用户ID
         self.chat_conversation_context: Dict[str, bool] = {}  # 标记是否处于对话上下文中
+
+        self.daily_share_wiling: Dict[str, float] = {}  # 存储每个聊天流的分享意愿
         self._decay_task = None
         self._mode_switch_task = None
         self._started = False
-        
+
     async def _decay_reply_willing(self):
         """定期衰减回复意愿"""
         while True:
@@ -255,5 +257,72 @@ class WillingManager:
                 self._mode_switch_task = asyncio.create_task(self._mode_switch_check())
             self._started = True
 
+    async def check_daily_share_wiling(self, chat_stream: ChatStream) -> float:
+        """检查群聊消息活跃度，决定是否提高分享日常意愿
+            目前仅支持群聊主动发起聊天，私聊不支持
+        Args:
+            chat_stream: 聊天流对象, 分享意愿不依赖聊天内容，只与群聊活跃度相关
+
+        Returns:
+            float: 分享意愿值
+        """
+        if not chat_stream or not chat_stream.group_info:
+            return 0.0
+
+        try:
+            # 获取24小时前的时间戳
+            one_day_ago = int(time.time()) - 86400  # 24小时 = 86400秒
+
+            # 从数据库查询24小时内的总消息数
+            daily_messages = list(db.messages.find({
+                "chat_id": chat_stream.stream_id,
+                "time": {"$gte": one_day_ago}
+            }))
+
+            # 如果24小时内消息数不超过100，不激活分享意愿
+            # 仅统计bot运行期间的消息
+            # 暂时不启用，配置文档指定群聊分享功能是否开启
+            # if len(daily_messages) <= 100:
+            #     logger.debug(f"群{chat_stream.group_info.group_id}在24小时内消息数{len(daily_messages)}条，小于阈值，鉴定为不活跃群，不激活分享意愿")
+            #     self.daily_share_wiling[chat_stream.stream_id] = 0
+            #     return 0.0
+
+            # 获取60分钟前的时间戳
+            thirty_minutes_ago = int(time.time()) - 36
+
+            # 从数据库查询最近60分钟的消息
+            recent_messages = list(db.messages.find({
+                "chat_id": chat_stream.stream_id,
+                "time": {"$gte": thirty_minutes_ago}
+            }))
+
+            # 如果没有最近消息，大幅提高分享意愿
+            if not recent_messages:
+                share_willing = self.daily_share_wiling.get(chat_stream.stream_id, global_config.daily_share_willing)
+                new_willing = min(0.6, max(0.3, share_willing + 0.2))
+                self.daily_share_wiling[chat_stream.stream_id] = new_willing
+                logger.info(f"群{chat_stream.group_info.group_id}最近60分钟无消息，提高分享意愿至{new_willing}")
+                return new_willing
+
+            # 如果有消息，但消息数量很少（比如少于3条），适度提高意愿
+            if len(recent_messages) < 3:
+                share_willing = self.daily_share_wiling.get(chat_stream.stream_id, global_config.daily_share_willing)
+                new_willing = min(0.4, max(0.2, share_willing + 0.1))
+                self.daily_share_wiling[chat_stream.stream_id] = new_willing
+                logger.info(f"群{chat_stream.group_info.group_id}最近60分钟消息较少，适度提高分享意愿至{new_willing}")
+                return new_willing
+
+            # 消息活跃度正常，保持当前意愿
+            logger.debug(
+                f"群{chat_stream.group_info.group_id}消息活跃度正常，保持分享意愿{self.daily_share_wiling.get(chat_stream.stream_id, global_config.daily_share_willing)}")
+            return self.daily_share_wiling.get(chat_stream.stream_id, global_config.daily_share_willing)
+
+        except Exception as e:
+            logger.error(f"检查群聊活跃度时出错: {str(e)}")
+            return global_config.daily_share_willing  # 出错时返回基础分享意愿
+
+    async def reset_daily_share_wiling(self, chat_stream: ChatStream) -> float:
+        """重置分享意愿"""
+        self.daily_share_wiling[chat_stream.stream_id] = 0
 # 创建全局实例
 willing_manager = WillingManager() 

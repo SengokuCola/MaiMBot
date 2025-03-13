@@ -105,6 +105,11 @@ class BotConfig:
         default_factory=lambda: ["表情包", "图片", "回复", "聊天记录"]
     )  # 添加新的配置项默认值
 
+    daily_share_willing: float = 0.3  # 基础分享意愿
+    daily_share_interval: int = 1800  # 日常分享检查间隔（秒）
+    daily_share_time_start: int = 8  # 日常分享开始时间（小时）
+    daily_share_time_end: int = 22  # 日常分享结束时间（小时）
+
     @staticmethod
     def get_config_dir() -> str:
         """获取配置文件目录"""
@@ -342,6 +347,17 @@ class BotConfig:
                 config.enable_debug_output = others_config.get("enable_debug_output", config.enable_debug_output)
                 config.enable_friend_chat = others_config.get("enable_friend_chat", config.enable_friend_chat)
 
+        def shares(parent: dict):
+            shares_config = parent["shares"]
+            config.daily_share_willing = shares_config.get("daily_share_willing", config.daily_share_willing)
+            config.daily_share_interval = shares_config.get("daily_share_interval", config.daily_share_interval)
+            config.daily_share_time_start = shares_config.get("daily_share_time_start", config.daily_share_time_start)
+            config.daily_share_time_end = shares_config.get("daily_share_time_end", config.daily_share_time_end)
+
+        def shares_allow_groups(parent: dict):
+            shares_allow_groups_config = parent["shares_allow_groups"]
+            config.shares_allow_groups = set(shares_allow_groups_config.get("shares_allow_groups", []))
+
         # 版本表达式：>=1.0.0,<2.0.0
         # 允许字段：func: method, support: str, notice: str, necessary: bool
         # 如果使用 notice 字段，在该组配置加载时，会展示该字段对用户的警示
@@ -361,6 +377,8 @@ class BotConfig:
             "chinese_typo": {"func": chinese_typo, "support": ">=0.0.3", "necessary": False},
             "groups": {"func": groups, "support": ">=0.0.0"},
             "others": {"func": others, "support": ">=0.0.0"},
+            "shares": {"func": shares, "support": ">=0.0.0"},
+            "shares_allow_groups": {"func": shares_allow_groups, "support": ">=0.0.0"},
         }
 
         # 原地修改，将 字符串版本表达式 转换成 版本对象
