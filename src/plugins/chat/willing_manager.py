@@ -16,16 +16,17 @@ class WillingManager:
         self._started = False
         self.default_willing: float = global_config.response_willing_amplifier  # 默认回复意愿
         
-        # 根据当前UTC时间和time_periods初始化默认回复意愿状态
-        self._init_willing_based_on_utc_time()
+        # 根据当前本地时间和time_periods初始化默认回复意愿状态
+        self._init_willing_based_on_local_time()
 
-    def _init_willing_based_on_utc_time(self):
-        """根据当前UTC时间初始化回复意愿状态"""
+    def _init_willing_based_on_local_time(self):
+        """根据当前本地时间初始化回复意愿状态"""
         if not global_config.enable_utc_time_control:
             return
             
-        current_utc_hour = datetime.datetime.utcnow().hour
-        logger.debug(f"机器人启动时UTC时间为{current_utc_hour}点，开始基于时间段配置初始化回复意愿")
+        current_time = datetime.datetime.now()
+        current_hour_float = current_time.hour + current_time.minute / 60.0
+        logger.debug(f"机器人启动时本地时间为{current_time.hour}点{current_time.minute}分，时间浮点值{current_hour_float:.2f}，开始基于时间段配置初始化回复意愿")
         
         # 查找当前时间所在的时间段
         current_period = None
@@ -34,7 +35,7 @@ class WillingManager:
             end_hour = period["end_hour"]
             
             # 检查当前时间是否在这个时间段内
-            if start_hour <= current_utc_hour < end_hour:
+            if start_hour <= current_hour_float < end_hour:
                 current_period = period
                 break
         
@@ -48,21 +49,21 @@ class WillingManager:
             time_range = end_hour - start_hour
             if time_range <= 0:  # 处理跨夜的情况
                 time_range += 24
-            position = (current_utc_hour - start_hour) / time_range
+            position = (current_hour_float - start_hour) / time_range
             
             if mode == "decrease":
                 # 逐渐降低意愿至0，根据位置计算当前应有的意愿
                 willing_factor = max(0, 1 - position)
                 # 设置全局默认回复意愿
                 default_willing = global_config.response_willing_amplifier * willing_factor
-                logger.info(f"启动时UTC时间{current_utc_hour}在降低时间段{start_hour}-{end_hour}内，位置{position:.2f}，意愿因子{willing_factor:.2f}，初始意愿设为: {default_willing:.2f}")
+                logger.info(f"启动时本地时间{current_time.hour}点{current_time.minute}分在降低时间段{start_hour}-{end_hour}内，位置{position:.4f}，意愿因子{willing_factor:.4f}，初始意愿设为: {default_willing:.4f}")
             
             elif mode == "increase":
                 # 从0逐渐恢复到配置值，根据位置计算当前应有的意愿
                 willing_factor = min(1, position)
                 # 设置全局默认回复意愿
                 default_willing = global_config.response_willing_amplifier * willing_factor
-                logger.info(f"启动时UTC时间{current_utc_hour}在提高时间段{start_hour}-{end_hour}内，位置{position:.2f}，意愿因子{willing_factor:.2f}，初始意愿设为: {default_willing:.2f}")
+                logger.info(f"启动时本地时间{current_time.hour}点{current_time.minute}分在提高时间段{start_hour}-{end_hour}内，位置{position:.4f}，意愿因子{willing_factor:.4f}，初始意愿设为: {default_willing:.4f}")
         else:
             # 未找到当前时间的配置，需要确定延续哪个时间点的值
             
@@ -73,7 +74,7 @@ class WillingManager:
             for period in global_config.time_periods:
                 end_hour = period["end_hour"]
                 # 计算结束时间与当前时间的差距（考虑跨天）
-                hours_diff = (current_utc_hour - end_hour) % 24
+                hours_diff = (current_hour_float - end_hour) % 24
                 
                 if hours_diff < min_hours_diff:
                     min_hours_diff = hours_diff
@@ -84,15 +85,15 @@ class WillingManager:
                 # 如果最近的时间段是降低模式，那么当前回复意愿应为0
                 if mode == "decrease":
                     default_willing = 0
-                    logger.info(f"启动时UTC时间{current_utc_hour}不在任何配置时间段内，延续最近的降低时间段结束值，初始意愿设为0")
+                    logger.info(f"启动时本地时间{current_time.hour}点{current_time.minute}分不在任何配置时间段内，延续最近的降低时间段结束值，初始意愿设为0")
                 # 如果最近的时间段是提高模式，设为最大值
                 else:
                     default_willing = global_config.response_willing_amplifier
-                    logger.info(f"启动时UTC时间{current_utc_hour}不在任何配置时间段内，延续最近的提高时间段结束值，初始意愿设为{default_willing:.2f}")
+                    logger.info(f"启动时本地时间{current_time.hour}点{current_time.minute}分不在任何配置时间段内，延续最近的提高时间段结束值，初始意愿设为{default_willing:.4f}")
             else:
                 # 没有任何时间段配置，使用默认值
                 default_willing = global_config.response_willing_amplifier
-                logger.info(f"没有找到任何有效的时间段配置，初始意愿设为默认值{default_willing:.2f}")
+                logger.info(f"没有找到任何有效的时间段配置，初始意愿设为默认值{default_willing:.4f}")
 
         # 保存计算出的默认回复意愿
         self.default_willing = default_willing
@@ -153,9 +154,10 @@ class WillingManager:
         current_willing *= global_config.response_willing_amplifier  # 放大回复意愿
         # print(f"放大系数_willing: {global_config.response_willing_amplifier}, 当前意愿: {current_willing}")
 
-        # 基于UTC时间调整回复意愿
+        # 基于本地时间调整回复意愿
         if global_config.enable_utc_time_control:
-            current_utc_hour = datetime.datetime.utcnow().hour
+            current_time = datetime.datetime.now()
+            current_hour_float = current_time.hour + current_time.minute / 60.0
             
             # 查找当前时间所在的时间段
             current_period = None
@@ -164,7 +166,7 @@ class WillingManager:
                 end_hour = period["end_hour"]
                 
                 # 检查当前时间是否在这个时间段内
-                if start_hour <= current_utc_hour < end_hour:
+                if start_hour <= current_hour_float < end_hour:
                     current_period = period
                     break
             
@@ -178,14 +180,14 @@ class WillingManager:
                 time_range = end_hour - start_hour
                 if time_range <= 0:  # 处理跨夜的情况
                     time_range += 24
-                position = (current_utc_hour - start_hour) / time_range
+                position = (current_hour_float - start_hour) / time_range
                 
                 if mode == "decrease":
                     # 逐渐降低意愿至0
                     willing_factor = max(0, 1 - position)
                     original_willing = current_willing
                     current_willing *= willing_factor
-                    logger.debug(f"UTC时间{current_utc_hour}在降低时间段{start_hour}-{end_hour}内，位置{position:.2f}，意愿因子{willing_factor:.2f}，调整前意愿: {original_willing:.2f}，调整后意愿: {current_willing:.2f}")
+                    logger.debug(f"本地时间{current_time.hour}点{current_time.minute}分在降低时间段{start_hour}-{end_hour}内，位置{position:.4f}，意愿因子{willing_factor:.4f}，调整前意愿: {original_willing:.4f}，调整后意愿: {current_willing:.4f}")
                 
                 elif mode == "increase":
                     # 从0逐渐恢复到配置值
@@ -194,7 +196,7 @@ class WillingManager:
                     # 这里可能需要根据上一个时间段的终点调整起始值
                     # 如果上一个时间段结束于0，则从0开始提高
                     current_willing *= willing_factor
-                    logger.debug(f"UTC时间{current_utc_hour}在提高时间段{start_hour}-{end_hour}内，位置{position:.2f}，意愿因子{willing_factor:.2f}，调整前意愿: {original_willing:.2f}，调整后意愿: {current_willing:.2f}")
+                    logger.debug(f"本地时间{current_time.hour}点{current_time.minute}分在提高时间段{start_hour}-{end_hour}内，位置{position:.4f}，意愿因子{willing_factor:.4f}，调整前意愿: {original_willing:.4f}，调整后意愿: {current_willing:.4f}")
             else:
                 # 未找到当前时间的配置，需要确定延续哪个时间点的值
                 
@@ -205,7 +207,7 @@ class WillingManager:
                 for period in global_config.time_periods:
                     end_hour = period["end_hour"]
                     # 计算结束时间与当前时间的差距（考虑跨天）
-                    hours_diff = (current_utc_hour - end_hour) % 24
+                    hours_diff = (current_hour_float - end_hour) % 24
                     
                     if hours_diff < min_hours_diff:
                         min_hours_diff = hours_diff
@@ -216,10 +218,10 @@ class WillingManager:
                     # 如果最近的时间段是降低模式，那么当前回复意愿应为0
                     if mode == "decrease":
                         current_willing = 0
-                        logger.debug(f"UTC时间{current_utc_hour}不在任何配置时间段内，延续最近的降低时间段结束值，意愿设为0")
+                        logger.debug(f"本地时间{current_time.hour}点{current_time.minute}分不在任何配置时间段内，延续最近的降低时间段结束值，意愿设为0")
                     # 如果最近的时间段是提高模式，保持原值不变（已经是global_config.response_willing_amplifier的值）
                     else:
-                        logger.debug(f"UTC时间{current_utc_hour}不在任何配置时间段内，延续最近的提高时间段结束值，保持原意愿{current_willing:.2f}")
+                        logger.debug(f"本地时间{current_time.hour}点{current_time.minute}分不在任何配置时间段内，延续最近的提高时间段结束值，保持原意愿{current_willing:.4f}")
 
         reply_probability = max((current_willing - 0.45) * 2, 0)
 
