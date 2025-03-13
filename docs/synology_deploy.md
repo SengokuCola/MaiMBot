@@ -24,6 +24,7 @@ bot_config.toml: https://github.com/SengokuCola/MaiMBot/blob/main/template/bot_c
 
 .env.prod: https://github.com/SengokuCola/MaiMBot/blob/main/template.env
 下载后，重命名为 `.env.prod`
+将 `HOST` 修改为 `0.0.0.0`，确保 maimbot 能被 napcat 访问
 按下图修改 mongodb 设置，使用  `MONGODB_URI`
 ![](https://raw.githubusercontent.com/ProperSAMA/MaiMBot/refs/heads/debug/docs/synology_.env.prod.png)
 
