@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 from PIL import Image
 import io
 
-from loguru import logger
+# from loguru import logger
 from nonebot import get_driver
 
 from ...common.database import db
@@ -18,10 +18,11 @@ from ..chat.utils import get_embedding
 from ..chat.utils_image import ImageManager, image_path_to_base64
 from ..models.utils_model import LLM_request
 
-from ..utils.logger_config import setup_logger, LogModule
+from ..utils.logger_config import LogClassification, LogModule
 
 # 配置日志
-logger = setup_logger(LogModule.EMOJI)
+log_module = LogModule()
+logger = log_module.setup_logger(LogClassification.EMOJI)
 
 driver = get_driver()
 config = driver.config
