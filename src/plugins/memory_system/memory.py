@@ -192,26 +192,52 @@ class Hippocampus:
         """
         current_timestamp = datetime.datetime.now().timestamp()
         chat_samples = []
-
+        added_ids = set()  # 全局已添加消息ID集合，用于去重
         # 短期：1h   中期：4h   长期：24h
         for _ in range(time_frequency.get('near')):
             random_time = current_timestamp - random.randint(1, 3600)
             messages = get_closest_chat_from_db(length=chat_size, timestamp=random_time)
             if messages:
-                chat_samples.append(messages)
+                # 过滤已存在的消息
+                filtered = []
+                for msg in messages:
+                    msg_id = msg.get("message_id")  # 假设消息中存在唯一标识字段
+                    if msg_id not in added_ids:
+                        filtered.append(msg)
+                        added_ids.add(msg_id)
+
+                if filtered:
+                    chat_samples.append(filtered)
 
         for _ in range(time_frequency.get('mid')):
             random_time = current_timestamp - random.randint(3600, 3600 * 4)
             messages = get_closest_chat_from_db(length=chat_size, timestamp=random_time)
             if messages:
-                chat_samples.append(messages)
+                # 过滤已存在的消息
+                filtered = []
+                for msg in messages:
+                    msg_id = msg.get("message_id")  # 假设消息中存在唯一标识字段
+                    if msg_id not in added_ids:
+                        filtered.append(msg)
+                        added_ids.add(msg_id)
+
+                if filtered:
+                    chat_samples.append(filtered)
 
         for _ in range(time_frequency.get('far')):
             random_time = current_timestamp - random.randint(3600 * 4, 3600 * 24)
             messages = get_closest_chat_from_db(length=chat_size, timestamp=random_time)
             if messages:
-                chat_samples.append(messages)
+                # 过滤已存在的消息
+                filtered = []
+                for msg in messages:
+                    msg_id = msg.get("message_id")  # 假设消息中存在唯一标识字段
+                    if msg_id not in added_ids:
+                        filtered.append(msg)
+                        added_ids.add(msg_id)
 
+                if filtered:
+                    chat_samples.append(filtered)
         return chat_samples
 
     async def memory_compress(self, messages: list, compress_rate=0.1):
