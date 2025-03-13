@@ -54,11 +54,11 @@ class PromptBuilder:
         mood_prompt = mood_manager.get_prompt()
 
         # 日程构建
-        # current_date = time.strftime("%Y-%m-%d", time.localtime())
-        # current_time = time.strftime("%H:%M:%S", time.localtime())
+        current_date = time.strftime("%Y-%m-%d", time.localtime())
+        current_time = time.strftime("%H:%M:%S", time.localtime())
         # bot_schedule_now_time, bot_schedule_now_activity = bot_schedule.get_current_task()
-        # prompt_date = f'''今天是{current_date}，现在是{current_time}，你今天的日程是：\n{bot_schedule.today_schedule}\n你现在正在{bot_schedule_now_activity}\n'''
-
+        prompt_date = f'''今天是{current_date}，现在是{current_time}\n'''
+        #，你今天的日程是：\n{bot_schedule.today_schedule}\n你现在正在{bot_schedule_now_activity}
         # 知识构建
         start_time = time.time()
 
@@ -172,7 +172,7 @@ class PromptBuilder:
         # 合并prompt
         prompt = ""
         prompt += f"{prompt_info}\n"
-        #prompt += f"{prompt_date}\n"
+        prompt += f"{prompt_date}\n"
         prompt += f"{chat_talking_prompt}\n"
         prompt += f"{prompt_personality}\n"
         prompt += f"{prompt_ger}\n"
