@@ -57,64 +57,25 @@ class ChatBot:
         """处理收到的通知"""
         # 戳一戳通知
         if isinstance(event, PokeNotifyEvent):
+            # 不处理其他人的戳戳
+            if not event.is_tome():
+                return
+
             # 用户屏蔽,不区分私聊/群聊
             if event.user_id in global_config.ban_user_id:
                 return
-            reply_poke_probability = 1  # 回复戳一戳的概率
+
+            reply_poke_probability = 1.0  # 回复戳一戳的概率，如果要改可以在这里改，暂不提取到配置文件
 
             if random() < reply_poke_probability:
-                user_info = UserInfo(
-                    user_id=event.user_id,
-                    user_nickname=get_user_nickname(event.user_id) or None,
-                    user_cardname=get_user_cardname(event.user_id) or None,
-                    platform="qq",
-                )
-                group_info = GroupInfo(group_id=event.group_id, group_name=None, platform="qq")
-                message_cq = MessageRecvCQ(
-                    message_id=None,
-                    user_info=user_info,
-                    raw_message=str("[戳了戳]你"),
-                    group_info=group_info,
-                    reply_message=None,
-                    platform="qq",
-                )
-                message_json = message_cq.to_dict()
+                raw_message = "[戳了戳]你"  # 默认类型
+                if info := event.raw_info:
+                    poke_type = info[2].get("txt", "戳了戳")  # 戳戳类型，例如“拍一拍”、“揉一揉”、“捏一捏”
+                    custom_poke_message = info[4].get("txt", "")  # 自定义戳戳消息，若不存在会为空字符串
+                    raw_message = f"[{poke_type}]你{custom_poke_message}"
 
-                # 进入maimbot
-                message = MessageRecv(message_json)
-                groupinfo = message.message_info.group_info
-                userinfo = message.message_info.user_info
-                messageinfo = message.message_info
-
-                chat = await chat_manager.get_or_create_stream(
-                    platform=messageinfo.platform, user_info=userinfo, group_info=groupinfo
-                )
-                message.update_chat_stream(chat)
-                await message.process()
-
-                bot_user_info = UserInfo(
-                    user_id=global_config.BOT_QQ,
-                    user_nickname=global_config.BOT_NICKNAME,
-                    platform=messageinfo.platform,
-                )
-
-                response, raw_content = await self.gpt.generate_response(message)
-
-                if response:
-                    for msg in response:
-                        message_segment = Seg(type="text", data=msg)
-
-                        bot_message = MessageSending(
-                            message_id=None,
-                            chat_stream=chat,
-                            bot_user_info=bot_user_info,
-                            sender_info=userinfo,
-                            message_segment=message_segment,
-                            reply=None,
-                            is_head=False,
-                            is_emoji=False,
-                        )
-                        message_manager.add_message(bot_message)
+                raw_message += "（这是一个类似摸摸头的友善行为，而不是恶意行为，请不要作出攻击发言）"
+                await self.directly_reply(raw_message, event.user_id, event.group_id)
 
     async def handle_message(self, event: MessageEvent, bot: Bot) -> None:
         """处理收到的消息"""
@@ -124,8 +85,13 @@ class ChatBot:
         # 用户屏蔽,不区分私聊/群聊
         if event.user_id in global_config.ban_user_id:
             return
-        
-        if event.reply and hasattr(event.reply, 'sender') and hasattr(event.reply.sender, 'user_id') and event.reply.sender.user_id in global_config.ban_user_id:
+
+        if (
+            event.reply
+            and hasattr(event.reply, "sender")
+            and hasattr(event.reply.sender, "user_id")
+            and event.reply.sender.user_id in global_config.ban_user_id
+        ):
             logger.debug(f"跳过处理回复来自被ban用户 {event.reply.sender.user_id} 的消息")
             return
         # 处理私聊消息
@@ -374,6 +340,72 @@ class ChatBot:
             # willing_manager.change_reply_willing_after_sent(
             #     chat_stream=chat
             # )
+
+    async def directly_reply(self, raw_message: str, user_id: int, group_id: int):
+        """
+        直接回复发来的消息，不经过意愿管理器
+        """
+
+        # 构造用户信息和群组信息
+        user_info = UserInfo(
+            user_id=user_id,
+            user_nickname=get_user_nickname(user_id) or None,
+            user_cardname=get_user_cardname(user_id) or None,
+            platform="qq",
+        )
+        group_info = GroupInfo(group_id=group_id, group_name=None, platform="qq")
+
+        message_cq = MessageRecvCQ(
+            message_id=None,
+            user_info=user_info,
+            raw_message=raw_message,
+            group_info=group_info,
+            reply_message=None,
+            platform="qq",
+        )
+        message_json = message_cq.to_dict()
+
+        message = MessageRecv(message_json)
+        groupinfo = message.message_info.group_info
+        userinfo = message.message_info.user_info
+        messageinfo = message.message_info
+
+        chat = await chat_manager.get_or_create_stream(
+            platform=messageinfo.platform, user_info=userinfo, group_info=groupinfo
+        )
+        message.update_chat_stream(chat)
+        await message.process()
+
+        bot_user_info = UserInfo(
+            user_id=global_config.BOT_QQ,
+            user_nickname=global_config.BOT_NICKNAME,
+            platform=messageinfo.platform,
+        )
+
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(messageinfo.time))
+        logger.info(
+            f"[{current_time}][{chat.group_info.group_name if chat.group_info else '私聊'}]{chat.user_info.user_nickname}:"
+            f"{message.processed_plain_text}"
+        )
+
+        # 使用大模型生成回复
+        response, raw_content = await self.gpt.generate_response(message)
+
+        if response:
+            for msg in response:
+                message_segment = Seg(type="text", data=msg)
+
+                bot_message = MessageSending(
+                    message_id=None,
+                    chat_stream=chat,
+                    bot_user_info=bot_user_info,
+                    sender_info=userinfo,
+                    message_segment=message_segment,
+                    reply=None,
+                    is_head=False,
+                    is_emoji=False,
+                )
+                message_manager.add_message(bot_message)
 
 
 # 创建全局ChatBot实例
