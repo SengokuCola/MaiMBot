@@ -30,8 +30,7 @@ CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1  # ChatAnyWhere API地�
 ```toml
 [model.llm_reasoning]
 name = "Pro/deepseek-ai/DeepSeek-R1"
-base_url = "SILICONFLOW_BASE_URL"  # 引用.env.prod中定义的地址
-key = "SILICONFLOW_KEY"            # 引用.env.prod中定义的密钥
+provider = "SILICONFLOW"         # 引用.env.prod中定义的宏
 ```
 
 如需切换到其他API服务，只需修改引用：
@@ -39,8 +38,7 @@ key = "SILICONFLOW_KEY"            # 引用.env.prod中定义的密钥
 ```toml
 [model.llm_reasoning]
 name = "deepseek-reasoner"       # 改成对应的模型名称，这里为DeepseekR1
-base_url = "DEEP_SEEK_BASE_URL"  # 切换为DeepSeek服务
-key = "DEEP_SEEK_KEY"            # 使用DeepSeek密钥
+provider = "DEEP_SEEK"           # 使用DeepSeek密钥
 ```
 
 ## 配置文件详解
@@ -82,7 +80,7 @@ PLUGINS=["src2.plugins.chat"]
 
 ```toml
 [bot]
-qq = "机器人QQ号"  # 必填
+qq = "机器人QQ号"  # 机器人的QQ号，必填
 nickname = "麦麦"  # 机器人昵称
 # alias_names: 配置机器人可使用的别名。当机器人在群聊或对话中被调用时，别名可以作为直接命令或提及机器人的关键字使用。
 # 该配置项为字符串数组。例如: ["小麦", "阿麦"]
@@ -92,13 +90,18 @@ alias_names = ["小麦", "阿麦"]  # 机器人别名
 prompt_personality = [
     "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",
     "是一个女大学生，你有黑色头发，你会刷小红书"
-]
-prompt_schedule = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
+] # 人格提示词
+prompt_schedule = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书" # 日程生成提示词
 
 [message]
 min_text_length = 2  # 最小回复长度
 max_context_size = 15  # 上下文记忆条数
 emoji_chance = 0.2  # 表情使用概率
+thinking_timeout = 120 # 机器人思考时间，时间越长能思考的时间越多，但是不要太长
+
+response_willing_amplifier = 1 # 机器人回复意愿放大系数，增大会更愿意聊天
+response_interested_rate_amplifier = 1 # 机器人回复兴趣度放大系数，听到记忆里的内容时意愿的放大系数
+down_frequency_rate = 3.5 # 降低回复频率的群组回复意愿降低系数
 ban_words = []  # 禁用词列表
 
 [emoji]
@@ -111,45 +114,40 @@ talk_allowed = {} # 允许对话的群号与对应的回复权重
 ban_user_id = []      # 禁止回复的用户QQ号
 
 [others]
-enable_advance_output = true  # 启用详细日志
-enable_kuuki_read = true  # 启用场景理解
+enable_advance_output = true # 是否启用高级输出
+enable_kuuki_read = true # 是否启用读空气功能
+enable_debug_output = false # 是否启用调试输出
+enable_friend_chat = false # 是否启用好友聊天
 
 # 模型配置
 [model.llm_reasoning]  # 推理模型
 name = "Pro/deepseek-ai/DeepSeek-R1"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.llm_reasoning_minor]  # 轻量推理模型
 name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.llm_normal]  # 对话模型
 name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.llm_normal_minor]  # 备用对话模型
 name = "deepseek-ai/DeepSeek-V2.5"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.vlm]  # 图像识别模型
 name = "deepseek-ai/deepseek-vl2"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 [model.embedding]  # 文本向量模型
 name = "BAAI/bge-m3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
 
 [topic.llm_topic]
 name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 ```
 
 ## 注意事项
