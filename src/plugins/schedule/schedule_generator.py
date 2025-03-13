@@ -138,8 +138,8 @@ class ScheduleGenerator:
             time1 = "23:59"
         if time2 == "24:00":
             time2 = "23:59"
-        t1 = datetime.datetime.strptime(time1, "%H:%M")
-        t2 = datetime.datetime.strptime(time2, "%H:%M")
+        t1 = datetime.datetime.strptime(time1[:4], "%H:%M")
+        t2 = datetime.datetime.strptime(time2[:4], "%H:%M")
         diff = int((t2 - t1).total_seconds() / 60)
         # 考虑时间的循环性
         if diff < -720:
