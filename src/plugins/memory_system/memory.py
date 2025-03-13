@@ -893,7 +893,6 @@ config = driver.config
 start_time = time.time()
 
 Database.initialize(
-
     uri=os.getenv("MONGODB_URI"),
     host=os.getenv("MONGODB_HOST", "127.0.0.1"),
     port=int(os.getenv("MONGODB_PORT", "27017")),
@@ -901,7 +900,6 @@ Database.initialize(
     username=os.getenv("MONGODB_USERNAME"),
     password=os.getenv("MONGODB_PASSWORD"),
     auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
-
 )
 # 创建记忆图
 memory_graph = Memory_graph()
