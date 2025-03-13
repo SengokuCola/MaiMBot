@@ -21,7 +21,7 @@ class ResponseGenerator:
     def __init__(self):
         self.model_r1 = LLM_request(
             model=global_config.llm_reasoning,
-            temperature=0.7,
+            temperature=0.6,
             max_tokens=1000,
             stream=True,
         )
