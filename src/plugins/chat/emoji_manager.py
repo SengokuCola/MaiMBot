@@ -179,7 +179,7 @@ class EmojiManager:
 
     async def _get_emoji_discription(self, image_base64: str) -> str:
         """获取表情包的标签，使用image_manager的描述生成功能"""
-
+        
         try:
             # 使用image_manager获取描述，去掉前后的方括号和"表情包："前缀
             description = await image_manager.get_emoji_description(image_base64)

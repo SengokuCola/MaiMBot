@@ -169,8 +169,6 @@ class ChatBot:
             config=global_config,
             is_emoji=message.is_emoji,
             interested_rate=interested_rate,
-
-
         )
         current_willing = willing_manager.get_willing(chat_stream=chat)
 

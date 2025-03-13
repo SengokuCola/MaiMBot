@@ -176,7 +176,6 @@ class CQCode:
 
         return None
 
-
     def translate_image(self) -> Optional[str]:
         """处理图片类型的CQ码，返回base64字符串"""
         if "url" not in self.params:
