@@ -9,7 +9,7 @@ import json
 
 
 is_share = False
-debug = False
+debug = True
 config_data = toml.load("config/bot_config.toml")
 
 #==============================================
@@ -125,10 +125,14 @@ def format_list_to_str(lst):
     res = ""
     for items in resarr:
         temp = '"' + str(items) + '"'
-        res += temp + ", "
+        res += temp + ","
 
-    res = res[:-2]
+    res = res[:-1]
     return "[" + res + "]"
+
+def format_list_to_str_bot_alias(lst):
+    resarr = lst.split(", ")
+    return resarr
 
 #env保存函数
 def save_trigger(server_address, server_port, final_result_list,t_mongodb_host,t_mongodb_port,t_mongodb_database_name,t_chatanywhere_base_url,t_chatanywhere_key,t_siliconflow_base_url,t_siliconflow_key,t_deepseek_base_url,t_deepseek_key):
@@ -158,9 +162,10 @@ def save_config_to_file(t_config_data):
     with open("config/bot_config.toml", "w", encoding="utf-8") as f:
         toml.dump(t_config_data, f)
     logger.success("配置已保存到 bot_config.toml 文件中")
-def save_bot_config(t_qqbot_qq, t_nickname):
-    config_data["bot"]["qq"] = t_qqbot_qq
+def save_bot_config(t_qqbot_qq, t_nickname,t_nickname_final_result):
+    config_data["bot"]["qq"] = int(t_qqbot_qq)
     config_data["bot"]["nickname"] = t_nickname
+    config_data["bot"]["alias_names"] = format_list_to_str_bot_alias(t_nickname_final_result)
     save_config_to_file(config_data)
     logger.info("Bot配置已保存")
     return "Bot配置已保存"
@@ -253,7 +258,7 @@ with (gr.Blocks(title="MaimBot配置文件编辑") as app):
                         final_result = gr.Text(label="修改后的列表")
                         add_btn.click(
                             add_item,
-                           inputs=[new_item_input, list_state],
+                            inputs=[new_item_input, list_state],
                             outputs=[list_state, list_display, item_to_delete, final_result]
                         )
 
@@ -261,7 +266,7 @@ with (gr.Blocks(title="MaimBot配置文件编辑") as app):
                             delete_item,
                             inputs=[item_to_delete, list_state],
                             outputs=[list_state, list_display, item_to_delete, final_result]
-                            )
+                        )
                     with gr.Row():
                         gr.Markdown(
                             '''MongoDB设置项\n
@@ -411,7 +416,7 @@ with (gr.Blocks(title="MaimBot配置文件编辑") as app):
                         elem_classes="save_bot_btn"
                     ).click(
                         save_bot_config,
-                        inputs=[qqbot_qq, nickname],
+                        inputs=[qqbot_qq, nickname,nickname_final_result],
                         outputs=[gr.Textbox(
                             label="保存Bot结果"
                         )]
@@ -477,7 +482,7 @@ with (gr.Blocks(title="MaimBot配置文件编辑") as app):
             with gr.Row():
                 with gr.Column(scale=3):
                     gr.Markdown(
-                        '''Coming Soooooooooooooooooooooooooooooooooooooooon'''
+                        '''Coming Soooooooooooooooooooooooooooooooon'''
                     )
 
 
