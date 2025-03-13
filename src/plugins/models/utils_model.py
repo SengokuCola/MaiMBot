@@ -270,7 +270,11 @@ class LLM_request:
                     await asyncio.sleep(wait_time)
                 else:
                     logger.critical(f"请求失败: {str(e)}")
-                    logger.critical(f"请求头: {await self._build_headers(no_key=True)} 请求体: {payload}")
+                    payload_data = str(payload)
+                    if len(payload_data) < 70:
+                        logger.critical(f"请求头: {await self._build_headers(no_key=True)} 请求体: {payload_data}")
+                    else:
+                        logger.critical(f"请求头: {await self._build_headers(no_key=True)} 请求体: {payload_data[0:70]}...")
                     raise RuntimeError(f"API请求失败: {str(e)}")
 
         logger.error("达到最大重试次数，请求仍然失败")
