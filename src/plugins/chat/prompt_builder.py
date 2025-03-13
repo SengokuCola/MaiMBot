@@ -189,8 +189,8 @@ class PromptBuilder:
         else:  # 第三种人格
             prompt_personality_check = f'''你的网名叫{global_config.BOT_NICKNAME}，{personality[2]}, 你正在浏览qq群，{promt_info_prompt} {activate_prompt_check} {extra_check_info}'''
 
-        prompt_check_if_response = f"{prompt_info}\n{chat_talking_prompt}\n{prompt_personality_check}"
-#{prompt_date}\n
+        prompt_check_if_response = f"{prompt_info}\n{prompt_date}\n{chat_talking_prompt}\n{prompt_personality_check}"
+
         return prompt, prompt_check_if_response
 
     def _build_initiative_prompt_select(self, group_id, probability_1=0.8, probability_2=0.1):
