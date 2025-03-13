@@ -1,5 +1,5 @@
 [inner]
-version = "0.0.8"
+version = "0.0.9"
 
 #如果你想要修改配置文件，请在修改后将version的值进行变更
 #如果新增项目，请在BotConfig类下新增相应的变量
@@ -9,8 +9,8 @@ version = "0.0.8"
 #"necessary":False      #是否必须
 #}
 #2.如果你修改的是[]下的项目，例如你新增了[memory]下的 memory_ban_words ,那么请在config.py的 load_config函数中的 memory函数下新增版本判断:
-            # if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
-            #     config.memory_ban_words = set(memory_config.get("memory_ban_words", []))
+# if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
+#     config.memory_ban_words = set(memory_config.get("memory_ban_words", []))
 
 [bot]
 qq = 123
@@ -19,19 +19,19 @@ alias_names = ["小麦", "阿麦"]
 
 [personality]
 prompt_personality = [
-        "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",    # 贴吧人格 
-        "是一个女大学生，你有黑色头发，你会刷小红书",    # 小红书人格
-        "是一个女大学生，你会刷b站，对ACG文化感兴趣"    # b站人格
-    ]
+    "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧", # 贴吧人格 
+    "是一个女大学生，你有黑色头发，你会刷小红书",            # 小红书人格
+    "是一个女大学生，你会刷b站，对ACG文化感兴趣",          # b站人格
+]
 personality_1_probability = 0.6 # 第一种人格出现概率
 personality_2_probability = 0.3 # 第二种人格出现概率
 personality_3_probability = 0.1 # 第三种人格出现概率，请确保三个概率相加等于1
 prompt_schedule = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
 
 [message]
-min_text_length = 2 # 与麦麦聊天时麦麦只会回答文本大于等于此数的消息
-max_context_size = 15 # 麦麦获得的上文数量
-emoji_chance = 0.2 # 麦麦使用表情包的概率
+min_text_length = 2    # 与麦麦聊天时麦麦只会回答文本大于等于此数的消息
+max_context_size = 15  # 麦麦获得的上文数量
+emoji_chance = 0.2     # 麦麦使用表情包的概率
 thinking_timeout = 120 # 麦麦思考时间
 
 response_willing_amplifier = 1 # 麦麦回复意愿放大系数，一般为1
@@ -39,7 +39,7 @@ response_interested_rate_amplifier = 1 # 麦麦回复兴趣度放大系数,听�
 down_frequency_rate = 3.5 # 降低回复频率的群组回复意愿降低系数
 ban_words = [
     # "403","张三"
-    ]
+]
 
 ban_msgs_regex = [
     # 需要过滤的消息（原始消息）匹配的正则表达式，匹配到的消息将被过滤（支持CQ码），若不了解正则表达式请勿修改
@@ -49,27 +49,27 @@ ban_msgs_regex = [
 ]
 
 [emoji]
-check_interval = 120 # 检查表情包的时间间隔
-register_interval = 10 # 注册表情包的时间间隔
-auto_save = true  # 自动偷表情包
-enable_check = false  # 是否启用表情包过滤
+check_interval = 120    # 检查表情包的时间间隔
+register_interval = 10  # 注册表情包的时间间隔
+auto_save = true        # 自动偷表情包
+enable_check = false    # 是否启用表情包过滤
 check_prompt = "符合公序良俗" # 表情包过滤要求
 
 [cq_code]
 enable_pic_translate = false
 
 [response]
-model_r1_probability = 0.8 # 麦麦回答时选择主要回复模型1 模型的概率
-model_v3_probability = 0.1 # 麦麦回答时选择次要回复模型2 模型的概率
+model_r1_probability = 0.8         # 麦麦回答时选择主要回复模型1 模型的概率
+model_v3_probability = 0.1         # 麦麦回答时选择次要回复模型2 模型的概率
 model_r1_distill_probability = 0.1 # 麦麦回答时选择次要回复模型3 模型的概率
-max_response_length = 1024 # 麦麦回答的最大token数
+max_response_length = 1024         # 麦麦回答的最大token数
 
 [memory]
 build_memory_interval = 600 # 记忆构建间隔 单位秒   间隔越低，麦麦学习越多，但是冗余信息也会增多
-memory_compress_rate = 0.1 # 记忆压缩率 控制记忆精简程度 建议保持默认,调高可以获得更多信息，但是冗余信息也会增多
+memory_compress_rate = 0.1  # 记忆压缩率 控制记忆精简程度 建议保持默认,调高可以获得更多信息，但是冗余信息也会增多
 
-forget_memory_interval = 600 # 记忆遗忘间隔 单位秒   间隔越低，麦麦遗忘越频繁，记忆更精简，但更难学习
-memory_forget_time = 24 #多长时间后的记忆会被遗忘 单位小时 
+forget_memory_interval = 600    # 记忆遗忘间隔 单位秒   间隔越低，麦麦遗忘越频繁，记忆更精简，但更难学习
+memory_forget_time = 24         #多长时间后的记忆会被遗忘 单位小时 
 memory_forget_percentage = 0.01 # 记忆遗忘比例 控制记忆遗忘程度 越大遗忘越多 建议保持默认
 
 
@@ -78,43 +78,39 @@ memory_ban_words = [ #不希望记忆的词
 ]
 
 [mood]
-mood_update_interval = 1.0 # 情绪更新间隔 单位秒
-mood_decay_rate = 0.95 # 情绪衰减率
+mood_update_interval = 1.0  # 情绪更新间隔 单位秒
+mood_decay_rate = 0.95      # 情绪衰减率
 mood_intensity_factor = 1.0 # 情绪强度因子
 
 [keywords_reaction] # 针对某个关键词作出反应
-enable = true  # 关键词反应功能的总开关
+enable = true # 关键词反应功能的总开关
 
 [[keywords_reaction.rules]] # 如果想要新增多个关键词，直接复制本条，修改keywords和reaction即可
-enable = true # 是否启用此条（为了人类在未来AI战争能更好地识别AI（bushi），默认开启）
-keywords = ["人机", "bot", "机器", "入机", "robot", "机器人"] # 会触发反应的关键词
+enable = true                                                  # 是否启用此条（为了人类在未来AI战争能更好地识别AI（bushi），默认开启）
+keywords = ["人机", "bot", "机器", "入机", "robot", "机器人"]           # 会触发反应的关键词
 reaction = "有人说你是人机或者机器人，否定这一事实，攻击或反问他。注意，只有认为你是机器人才回复，否则不要否认" # 触发之后添加的提示词
 
 [[keywords_reaction.rules]] # 就像这样复制
-enable = false # 仅作示例，不会触发
-keywords = ["测试关键词回复","test",""]
+enable = false                     # 仅作示例，不会触发
+keywords = ["测试关键词回复", "test", ""]
 reaction = "回答“测试成功”"
 
 [chinese_typo]
-enable = true # 是否启用中文错别字生成器
-error_rate=0.006 # 单字替换概率
-min_freq=7 # 最小字频阈值
-tone_error_rate=0.2 # 声调错误概率
-word_replace_rate=0.006 # 整词替换概率
+enable = true             # 是否启用中文错别字生成器
+error_rate = 0.006        # 单字替换概率
+min_freq = 7              # 最小字频阈值
+tone_error_rate = 0.2     # 声调错误概率
+word_replace_rate = 0.006 # 整词替换概率
 
 [others]
 enable_advance_output = true # 是否启用高级输出
-enable_kuuki_read = true # 是否启用读空气功能
-enable_debug_output = false # 是否启用调试输出
-enable_friend_chat = false # 是否启用好友聊天
+enable_kuuki_read = true     # 是否启用读空气功能
+enable_debug_output = false  # 是否启用调试输出
+enable_friend_chat = false   # 是否启用好友聊天
 
 [groups]
-talk_allowed = [
-    123,
-    123,
-]  #可以回复消息的群
-talk_frequency_down = []  #降低回复频率的群
-ban_user_id = []  #禁止回复消息的QQ号
+talk_allowed = { 123456 = 1.5, 789012 = 1.0, 345678 = 0.5 } # 允许对话的群号与对应的回复权重
+ban_user_id = []                                            #禁止回复消息的QQ号
 
 
 #V3
@@ -134,8 +130,8 @@ ban_user_id = []  #禁止回复消息的QQ号
 [model.llm_reasoning] #回复模型1 主要回复模型
 name = "Pro/deepseek-ai/DeepSeek-R1"
 provider = "SILICONFLOW"
-pri_in = 0 #模型的输入价格（非必填，可以记录消耗）
-pri_out = 0 #模型的输出价格（非必填，可以记录消耗）
+pri_in = 0                           #模型的输入价格（非必填，可以记录消耗）
+pri_out = 0                          #模型的输出价格（非必填，可以记录消耗）
 
 
 [model.llm_reasoning_minor] #回复模型3 次要回复模型
@@ -177,7 +173,6 @@ pri_out = 0
 [model.vlm] #图像识别 0.35/m
 name = "Pro/Qwen/Qwen2-VL-7B-Instruct"
 provider = "SILICONFLOW"
-
 
 
 #嵌入模型

@@ -107,8 +107,7 @@ enable_check = false  # 启用表情审核
 check_prompt = "符合公序良俗"
 
 [groups]
-talk_allowed = []      # 允许对话的群号
-talk_frequency_down = []   # 降低回复频率的群号
+talk_allowed = {} # 允许对话的群号与对应的回复权重
 ban_user_id = []      # 禁止回复的用户QQ号
 
 [others]

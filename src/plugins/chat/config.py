@@ -27,8 +27,7 @@ class BotConfig:
 
     ENABLE_PIC_TRANSLATE: bool = True  # 是否启用图片翻译
 
-    talk_allowed_groups = set()
-    talk_frequency_down_groups = set()
+    talk_allowed_groups = {}
     thinking_timeout: int = 100  # 思考时间
 
     response_willing_amplifier: float = 1.0  # 回复意愿放大系数
@@ -330,8 +329,10 @@ class BotConfig:
 
         def groups(parent: dict):
             groups_config = parent["groups"]
-            config.talk_allowed_groups = set(groups_config.get("talk_allowed", []))
-            config.talk_frequency_down_groups = set(groups_config.get("talk_frequency_down", []))
+
+            # talk_allowed 是一个dict组，每个dict包含群id和回复权重，talk_allowed_groups是一个dict，key是群id，value是回复权重
+            config.talk_allowed_groups = {int(k): v for k, v in groups_config.get("talk_allowed", {}).items()}
+            
             config.ban_user_id = set(groups_config.get("ban_user_id", []))
 
         def others(parent: dict):

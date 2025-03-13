@@ -182,10 +182,12 @@ class WillingManager:
         # 考虑回复意愿的影响
         reply_probability = base_probability * current_willing
         
-        # 检查群组权限（如果是群聊）
+        # 群聊，根据配置调整回复概率
         if chat_stream.group_info and config:               
-            if chat_stream.group_info.group_id in config.talk_frequency_down_groups:
-                reply_probability = reply_probability / global_config.down_frequency_rate
+            if chat_stream.group_info.group_id in config.talk_allowed_groups.keys():
+                reply_probability = reply_probability * global_config.talk_allowed_groups[chat_stream.group_info.group_id]
+            else:
+                reply_probability = 0
 
         # 限制最大回复概率
         reply_probability = min(reply_probability, 0.75)  # 设置最大回复概率为75%

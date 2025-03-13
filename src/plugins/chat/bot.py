@@ -117,7 +117,7 @@ class ChatBot:
         else:
             # 白名单设定由nontbot侧完成
             if event.group_id:
-                if event.group_id not in global_config.talk_allowed_groups:
+                if event.group_id not in global_config.talk_allowed_groups.keys():
                     return
 
             user_info = UserInfo(
