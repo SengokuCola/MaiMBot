@@ -16,6 +16,7 @@ from .message import MessageRecv,Message
 from .message_base import UserInfo
 from .chat_stream import ChatStream
 from ..moods.moods import MoodManager
+from ...common.database import db
 
 driver = get_driver()
 config = driver.config
@@ -76,11 +77,10 @@ def calculate_information_content(text):
     return entropy
 
 
-def get_cloest_chat_from_db(db, length: int, timestamp: str):
+def get_closest_chat_from_db(length: int, timestamp: str):
     """从数据库中获取最接近指定时间戳的聊天记录
     
     Args:
-        db: 数据库实例
         length: 要获取的消息数量
         timestamp: 时间戳
         
@@ -115,11 +115,10 @@ def get_cloest_chat_from_db(db, length: int, timestamp: str):
     return []
 
 
-async def get_recent_group_messages(db, chat_id:str, limit: int = 12) -> list:
+async def get_recent_group_messages(chat_id:str, limit: int = 12) -> list:
     """从数据库获取群组最近的消息记录
     
     Args:
-        db: Database实例
         group_id: 群组ID
         limit: 获取消息数量，默认12条
         
@@ -161,7 +160,7 @@ async def get_recent_group_messages(db, chat_id:str, limit: int = 12) -> list:
     return message_objects
 
 
-def get_recent_group_detailed_plain_text(db, chat_stream_id: int, limit: int = 12, combine=False):
+def get_recent_group_detailed_plain_text(chat_stream_id: int, limit: int = 12, combine=False):
     recent_messages = list(db.messages.find(
         {"chat_id": chat_stream_id},
         {

@@ -65,6 +65,8 @@ class GroupInfo:
         Returns:
             GroupInfo: 新的实例
         """
+        if data.get('group_id') is None:
+            return None
         return cls(
             platform=data.get('platform'),
             group_id=data.get('group_id'),
@@ -129,8 +131,8 @@ class BaseMessageInfo:
         Returns:
             BaseMessageInfo: 新的实例
         """
-        group_info = GroupInfo(**data.get('group_info', {}))
-        user_info = UserInfo(**data.get('user_info', {}))
+        group_info = GroupInfo.from_dict(data.get('group_info', {}))
+        user_info = UserInfo.from_dict(data.get('user_info', {}))
         return cls(
             platform=data.get('platform'),
             message_id=data.get('message_id'),
@@ -173,7 +175,7 @@ class MessageBase:
         Returns:
             MessageBase: 新的实例
         """
-        message_info = BaseMessageInfo(**data.get('message_info', {}))
+        message_info = BaseMessageInfo.from_dict(data.get('message_info', {}))
         message_segment = Seg(**data.get('message_segment', {}))
         raw_message = data.get('raw_message',None)
         return cls(

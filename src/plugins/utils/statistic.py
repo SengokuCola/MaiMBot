@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict
 from loguru import logger
 
-from ...common.database import Database
+from ...common.database import db
 
 
 class LLMStatistics:
@@ -15,7 +15,6 @@ class LLMStatistics:
         Args:
             output_file: 统计结果输出文件路径
         """
-        self.db = Database.get_instance()
         self.output_file = output_file
         self.running = False
         self.stats_thread = None
@@ -53,7 +52,7 @@ class LLMStatistics:
             "costs_by_model": defaultdict(float)
         }
         
-        cursor = self.db.llm_usage.find({
+        cursor = db.llm_usage.find({
             "timestamp": {"$gte": start_time}
         })
         

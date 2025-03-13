@@ -14,7 +14,7 @@ root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(root_path)
 
 # 现在可以导入src模块
-from src.common.database import Database
+from src.common.database import db
 
 # 加载根目录下的env.edv文件
 env_path = os.path.join(root_path, ".env.prod")
@@ -24,18 +24,6 @@ load_dotenv(env_path)
 
 class KnowledgeLibrary:
     def __init__(self):
-        # 初始化数据库连接
-        if Database._instance is None:
-            Database.initialize(
-                uri=os.getenv("MONGODB_URI"),
-                host=os.getenv("MONGODB_HOST", "127.0.0.1"),
-                port=int(os.getenv("MONGODB_PORT", "27017")),
-                db_name=os.getenv("DATABASE_NAME", "MegBot"),
-                username=os.getenv("MONGODB_USERNAME"),
-                password=os.getenv("MONGODB_PASSWORD"),
-                auth_source=os.getenv("MONGODB_AUTH_SOURCE"),
-            )
-        self.db = Database.get_instance()
         self.raw_info_dir = "data/raw_info"
         self._ensure_dirs()
         self.api_key = os.getenv("SILICONFLOW_KEY")
@@ -176,7 +164,7 @@ class KnowledgeLibrary:
         
         try:
             current_hash = self.calculate_file_hash(file_path)
-            processed_record = self.db.processed_files.find_one({"file_path": file_path})
+            processed_record = db.processed_files.find_one({"file_path": file_path})
             
             if processed_record:
                 if processed_record.get("hash") == current_hash:
@@ -197,14 +185,14 @@ class KnowledgeLibrary:
                         "split_length": knowledge_length,
                         "created_at": datetime.now()
                     }
-                    self.db.knowledges.insert_one(knowledge)
+                    db.knowledges.insert_one(knowledge)
                     result["chunks_processed"] += 1
             
             split_by = processed_record.get("split_by", []) if processed_record else []
             if knowledge_length not in split_by:
                 split_by.append(knowledge_length)
             
-            self.db.knowledges.processed_files.update_one(
+            db.knowledges.processed_files.update_one(
                 {"file_path": file_path},
                 {
                     "$set": {
@@ -322,7 +310,7 @@ class KnowledgeLibrary:
             {"$project": {"content": 1, "similarity": 1, "file_path": 1}}
         ]
         
-        results = list(self.db.knowledges.aggregate(pipeline))
+        results = list(db.knowledges.aggregate(pipeline))
         return results
 
 # 创建单例实例
@@ -346,7 +334,7 @@ if __name__ == "__main__":
         elif choice == '2':
             confirm = input("确定要删除所有知识吗？这个操作不可撤销！(y/n): ").strip().lower()
             if confirm == 'y':
-                knowledge_library.db.knowledges.delete_many({})
+                db.knowledges.delete_many({})
                 console.print("[green]已清空所有知识！[/green]")
             continue
         elif choice == '1':

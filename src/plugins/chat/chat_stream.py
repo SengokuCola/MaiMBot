@@ -6,7 +6,7 @@ from typing import Dict, Optional
 
 from loguru import logger
 
-from ...common.database import Database
+from ...common.database import db
 from .message_base import GroupInfo, UserInfo
 
 
@@ -83,7 +83,6 @@ class ChatManager:
     def __init__(self):
         if not self._initialized:
             self.streams: Dict[str, ChatStream] = {}  # stream_id -> ChatStream
-            self.db = Database.get_instance()
             self._ensure_collection()
             self._initialized = True
             # 在事件循环中启动初始化
@@ -111,11 +110,11 @@ class ChatManager:
 
     def _ensure_collection(self):
         """确保数据库集合存在并创建索引"""
-        if "chat_streams" not in self.db.list_collection_names():
-            self.db.create_collection("chat_streams")
+        if "chat_streams" not in db.list_collection_names():
+            db.create_collection("chat_streams")
             # 创建索引
-            self.db.chat_streams.create_index([("stream_id", 1)], unique=True)
-            self.db.chat_streams.create_index(
+            db.chat_streams.create_index([("stream_id", 1)], unique=True)
+            db.chat_streams.create_index(
                 [("platform", 1), ("user_info.user_id", 1), ("group_info.group_id", 1)]
             )
 
@@ -168,7 +167,7 @@ class ChatManager:
             return stream
 
         # 检查数据库中是否存在
-        data = self.db.chat_streams.find_one({"stream_id": stream_id})
+        data = db.chat_streams.find_one({"stream_id": stream_id})
         if data:
             stream = ChatStream.from_dict(data)
             # 更新用户信息和群组信息
@@ -204,7 +203,7 @@ class ChatManager:
     async def _save_stream(self, stream: ChatStream):
         """保存聊天流到数据库"""
         if not stream.saved:
-            self.db.chat_streams.update_one(
+            db.chat_streams.update_one(
                 {"stream_id": stream.stream_id}, {"$set": stream.to_dict()}, upsert=True
             )
             stream.saved = True
@@ -216,7 +215,7 @@ class ChatManager:
 
     async def load_all_streams(self):
         """从数据库加载所有聊天流"""
-        all_streams = self.db.chat_streams.find({})
+        all_streams = db.chat_streams.find({})
         for data in all_streams:
             stream = ChatStream.from_dict(data)
             self.streams[stream.stream_id] = stream

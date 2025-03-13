@@ -121,6 +121,7 @@ sudo nano /etc/systemd/system/maimbot.service
 输入以下内容：
 
 `<maimbot_directory>`：你的maimbot目录
+
 `<venv_directory>`：你的venv环境（就是上文创建环境后，执行的代码`source maimbot/bin/activate`中source后面的路径的绝对路径）
 
 ```ini

@@ -8,18 +8,20 @@ from nonebot import get_driver
 
 from src.plugins.chat.config import global_config
 
-from ...common.database import Database  # 使用正确的导入语法
+from ...common.database import db  # 使用正确的导入语法
 from ..models.utils_model import LLM_request
 
 driver = get_driver()
 config = driver.config
 
+
 class ScheduleGenerator:
+    enable_output: bool = True
+
     def __init__(self):
         # 根据global_config.llm_normal这一字典配置指定模型
         # self.llm_scheduler = LLMModel(model = global_config.llm_normal,temperature=0.9)
         self.llm_scheduler = LLM_request(model=global_config.llm_normal, temperature=0.9)
-        self.db = Database.get_instance()
         self.today_schedule_text = ""
         self.today_schedule = {}
         self.tomorrow_schedule_text = ""
@@ -33,43 +35,50 @@ class ScheduleGenerator:
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
 
         self.today_schedule_text, self.today_schedule = await self.generate_daily_schedule(target_date=today)
-        self.tomorrow_schedule_text, self.tomorrow_schedule = await self.generate_daily_schedule(target_date=tomorrow,
-                                                                                                 read_only=True)
+        self.tomorrow_schedule_text, self.tomorrow_schedule = await self.generate_daily_schedule(
+            target_date=tomorrow, read_only=True
+        )
         self.yesterday_schedule_text, self.yesterday_schedule = await self.generate_daily_schedule(
-            target_date=yesterday, read_only=True)
+            target_date=yesterday, read_only=True
+        )
 
-    async def generate_daily_schedule(self, target_date: datetime.datetime = None, read_only: bool = False) -> Dict[
-        str, str]:
-
+    async def generate_daily_schedule(
+        self, target_date: datetime.datetime = None, read_only: bool = False
+    ) -> Dict[str, str]:
         date_str = target_date.strftime("%Y-%m-%d")
         weekday = target_date.strftime("%A")
 
         schedule_text = str
 
-        existing_schedule = self.db.schedule.find_one({"date": date_str})
+        existing_schedule = db.schedule.find_one({"date": date_str})
         if existing_schedule:
-            logger.debug(f"{date_str}的日程已存在:")
+            if self.enable_output:
+                logger.debug(f"{date_str}的日程已存在:")
             schedule_text = existing_schedule["schedule"]
             # print(self.schedule_text)
 
         elif not read_only:
             logger.debug(f"{date_str}的日程不存在，准备生成新的日程。")
-            prompt = f"""我是{global_config.BOT_NICKNAME}，{global_config.PROMPT_SCHEDULE_GEN}，请为我生成{date_str}（{weekday}）的日程安排，包括：""" + \
-                     """
+            prompt = (
+                f"""我是{global_config.BOT_NICKNAME}，{global_config.PROMPT_SCHEDULE_GEN}，请为我生成{date_str}（{weekday}）的日程安排，包括："""
+                + """
             1. 早上的学习和工作安排
             2. 下午的活动和任务
             3. 晚上的计划和休息时间
             请按照时间顺序列出具体时间点和对应的活动，用一个时间点而不是时间段来表示时间，用JSON格式返回日程表，仅返回内容，不要返回注释，不要添加任何markdown或代码块样式，时间采用24小时制，格式为{"时间": "活动","时间": "活动",...}。"""
+            )
 
             try:
                 schedule_text, _ = await self.llm_scheduler.generate_response(prompt)
-                self.db.schedule.insert_one({"date": date_str, "schedule": schedule_text})
+                db.schedule.insert_one({"date": date_str, "schedule": schedule_text})
+                self.enable_output = True
             except Exception as e:
                 logger.error(f"生成日程失败: {str(e)}")
                 schedule_text = "生成日程时出错了"
             # print(self.schedule_text)
         else:
-            logger.debug(f"{date_str}的日程不存在。")
+            if self.enable_output:
+                logger.debug(f"{date_str}的日程不存在。")
             schedule_text = "忘了"
 
             return schedule_text, None
@@ -96,7 +105,7 @@ class ScheduleGenerator:
 
         # 找到最接近当前时间的任务
         closest_time = None
-        min_diff = float('inf')
+        min_diff = float("inf")
 
         # 检查今天的日程
         if not self.today_schedule:
@@ -143,12 +152,13 @@ class ScheduleGenerator:
         """打印完整的日程安排"""
         if not self._parse_schedule(self.today_schedule_text):
             logger.warning("今日日程有误，将在下次运行时重新生成")
-            self.db.schedule.delete_one({"date": datetime.datetime.now().strftime("%Y-%m-%d")})
+            db.schedule.delete_one({"date": datetime.datetime.now().strftime("%Y-%m-%d")})
         else:
             logger.info("=== 今日日程安排 ===")
             for time_str, activity in self.today_schedule.items():
                 logger.info(f"时间[{time_str}]: 活动[{activity}]")
             logger.info("==================")
+            self.enable_output = False
 
 
 # def main():

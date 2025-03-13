@@ -86,9 +86,12 @@ class CQCode:
             else:
                 self.translated_segments = Seg(type="text", data="[图片]")
         elif self.type == "at":
-            user_nickname = get_user_nickname(self.params.get("qq", ""))
-            self.translated_segments = Seg(
-                type="text", data=f"[@{user_nickname or '某人'}]"
+            if self.params.get("qq") == "all":
+                self.translated_segments = Seg(type="text", data="@[全体成员]")
+            else:  
+                user_nickname = get_user_nickname(self.params.get("qq", ""))
+                self.translated_segments = Seg(
+                    type="text", data=f"[@{user_nickname or '某人'}]"
             )
         elif self.type == "reply":
             reply_segments = self.translate_reply()

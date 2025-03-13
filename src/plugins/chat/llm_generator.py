@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union
 from nonebot import get_driver
 from loguru import logger
 
-from ...common.database import Database
+from ...common.database import db
 from ..models.utils_model import LLM_request
 from .config import global_config
 from .message import MessageRecv, MessageThinking, Message
@@ -34,7 +34,6 @@ class ResponseGenerator:
         self.model_v25 = LLM_request(
             model=global_config.llm_normal_minor, temperature=0.7, max_tokens=1000
         )
-        self.db = Database.get_instance()
         self.current_model_type = "r1"  # 默认使用 R1
 
     async def generate_response(
@@ -154,7 +153,7 @@ class ResponseGenerator:
         reasoning_content: str,
     ):
         """保存对话记录到数据库"""
-        self.db.reasoning_logs.insert_one(
+        db.reasoning_logs.insert_one(
             {
                 "time": time.time(),
                 "chat_id": message.chat_stream.stream_id,
@@ -211,7 +210,6 @@ class ResponseGenerator:
 
 class InitiativeMessageGenerate:
     def __init__(self):
-        self.db = Database.get_instance()
         self.model_r1 = LLM_request(model=global_config.llm_reasoning, temperature=0.7)
         self.model_v3 = LLM_request(model=global_config.llm_normal, temperature=0.7)
         self.model_r1_distill = LLM_request(

@@ -1,15 +1,12 @@
 from typing import Optional, Union
 
-from ...common.database import Database
+from ...common.database import db
 from .message import MessageSending, MessageRecv
 from .chat_stream import ChatStream
 from loguru import logger
 
 
 class MessageStorage:
-    def __init__(self):
-        self.db = Database.get_instance()
-        
     async def store_message(self, message: Union[MessageSending, MessageRecv],chat_stream:ChatStream, topic: Optional[str] = None) -> None:
         """存储消息到数据库"""
         try:
@@ -23,7 +20,7 @@ class MessageStorage:
                     "detailed_plain_text": message.detailed_plain_text,
                     "topic": topic,
                 }
-            self.db.messages.insert_one(message_data)
+            db.messages.insert_one(message_data)
         except Exception:
             logger.exception("存储消息失败")
 

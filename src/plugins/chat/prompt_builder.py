@@ -3,7 +3,7 @@ import time
 from typing import Optional
 from loguru import logger
 
-from ...common.database import Database
+from ...common.database import db
 from ..memory_system.memory import hippocampus, memory_graph
 from ..moods.moods import MoodManager
 from ..schedule.schedule_generator import bot_schedule
@@ -16,7 +16,6 @@ class PromptBuilder:
     def __init__(self):
         self.prompt_built = ''
         self.activate_messages = ''
-        self.db = Database.get_instance()
 
 
 
@@ -76,7 +75,7 @@ class PromptBuilder:
         chat_in_group=True
         chat_talking_prompt = ''
         if stream_id:
-            chat_talking_prompt = get_recent_group_detailed_plain_text(self.db, stream_id, limit=global_config.MAX_CONTEXT_SIZE,combine = True)   
+            chat_talking_prompt = get_recent_group_detailed_plain_text(stream_id, limit=global_config.MAX_CONTEXT_SIZE,combine = True)   
             chat_stream=chat_manager.get_stream(stream_id)
             if chat_stream.group_info:
                 chat_talking_prompt = f"以下是群里正在聊天的内容：\n{chat_talking_prompt}"
@@ -199,7 +198,7 @@ class PromptBuilder:
 
         chat_talking_prompt = ''
         if group_id:
-            chat_talking_prompt = get_recent_group_detailed_plain_text(self.db, group_id,
+            chat_talking_prompt = get_recent_group_detailed_plain_text(group_id,
                                                                        limit=global_config.MAX_CONTEXT_SIZE,
                                                                        combine=True)
 
@@ -311,7 +310,7 @@ class PromptBuilder:
             {"$project": {"content": 1, "similarity": 1}}
         ]
 
-        results = list(self.db.knowledges.aggregate(pipeline))
+        results = list(db.knowledges.aggregate(pipeline))
         # print(f"\033[1;34m[调试]\033[0m获取知识库内容结果: {results}")
 
         if not results:

@@ -55,14 +55,14 @@ class WillingManager:
             for chat_id in list(self.chat_high_willing_mode.keys()):
                 last_change_time = self.chat_last_mode_change.get(chat_id, 0)
                 is_high_mode = self.chat_high_willing_mode.get(chat_id, False)
-                
+
                 # 获取当前模式的持续时间
                 duration = 0
                 if is_high_mode:
                     duration = self.chat_high_willing_duration.get(chat_id, 180)  # 使用已存储的持续时间或默认3分钟
                 else:
                     duration = self.chat_low_willing_duration.get(chat_id, 300)  # 使用已存储的持续时间或默认5分钟
-                
+
                 # 检查是否需要切换模式
                 if current_time - last_change_time > duration:
                     self._switch_willing_mode(chat_id)
@@ -111,7 +111,7 @@ class WillingManager:
     def _ensure_chat_initialized(self, chat_id: str):
         """确保聊天流的所有数据已初始化"""
         current_time = time.time()
-        
+
         if chat_id not in self.chat_reply_willing:
             self.chat_reply_willing[chat_id] = 0.1
         
@@ -263,7 +263,7 @@ class WillingManager:
                 # 冷群中提高回复概率为三倍
                 reply_probability = min(reply_probability * 3.0)
                 logger.debug(f"检测到冷群 {group_id}，提高回复概率到: {reply_probability:.2f}")
-        
+
         # 检查群组权限（如果是群聊）
         if chat_stream.group_info and config:               
             if chat_stream.group_info.group_id in config.talk_frequency_down_groups:

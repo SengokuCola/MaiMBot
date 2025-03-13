@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional
 from loguru import logger
 
-from ...common.database import Database
+from ...common.database import db
 from .message_base import UserInfo
 from .chat_stream import ChatStream
 
@@ -167,14 +167,12 @@ class RelationshipManager:
 
     async def load_all_relationships(self):
         """加载所有关系对象"""
-        db = Database.get_instance()
         all_relationships = db.relationships.find({})
         for data in all_relationships:
             await self.load_relationship(data)
 
     async def _start_relationship_manager(self):
         """每5分钟自动保存一次关系数据"""
-        db = Database.get_instance()
         # 获取所有关系记录
         all_relationships = db.relationships.find({})
         # 依次加载每条记录
@@ -205,7 +203,6 @@ class RelationshipManager:
         age = relationship.age
         saved = relationship.saved
 
-        db = Database.get_instance()
         db.relationships.update_one(
             {'user_id': user_id, 'platform': platform},
             {'$set': {

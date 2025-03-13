@@ -190,7 +190,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-.env
 
 # jieba
 jieba.cache
@@ -200,3 +199,8 @@ jieba.cache
 
 # direnv
 /.direnv
+
+# JetBrains
+.idea
+*.iml
+*.ipr

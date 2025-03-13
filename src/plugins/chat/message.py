@@ -23,8 +23,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @dataclass
 class Message(MessageBase):
-    chat_stream: ChatStream=None
-    reply: Optional['Message'] = None
+    chat_stream: ChatStream = None
+    reply: Optional["Message"] = None
     detailed_plain_text: str = ""
     processed_plain_text: str = ""
 
@@ -35,7 +35,7 @@ class Message(MessageBase):
         chat_stream: ChatStream,
         user_info: UserInfo,
         message_segment: Optional[Seg] = None,
-        reply: Optional['MessageRecv'] = None,
+        reply: Optional["MessageRecv"] = None,
         detailed_plain_text: str = "",
         processed_plain_text: str = "",
     ):
@@ -45,21 +45,17 @@ class Message(MessageBase):
             message_id=message_id,
             time=time,
             group_info=chat_stream.group_info,
-            user_info=user_info
+            user_info=user_info,
         )
 
         # 调用父类初始化
-        super().__init__(
-            message_info=message_info,
-            message_segment=message_segment,
-            raw_message=None
-        )
+        super().__init__(message_info=message_info, message_segment=message_segment, raw_message=None)
 
         self.chat_stream = chat_stream
         # 文本处理相关属性
         self.processed_plain_text = processed_plain_text
         self.detailed_plain_text = detailed_plain_text
-        
+
         # 回复消息
         self.reply = reply
 
@@ -74,41 +70,38 @@ class MessageRecv(Message):
         Args:
             message_dict: MessageCQ序列化后的字典
         """
-        self.message_info = BaseMessageInfo.from_dict(message_dict.get('message_info', {}))
+        self.message_info = BaseMessageInfo.from_dict(message_dict.get("message_info", {}))
 
-        message_segment = message_dict.get('message_segment', {})
+        message_segment = message_dict.get("message_segment", {})
 
-        if message_segment.get('data','') == '[json]':
+        if message_segment.get("data", "") == "[json]":
             # 提取json消息中的展示信息
-            pattern = r'\[CQ:json,data=(?P<json_data>.+?)\]'
-            match = re.search(pattern, message_dict.get('raw_message',''))
-            raw_json = html.unescape(match.group('json_data'))
+            pattern = r"\[CQ:json,data=(?P<json_data>.+?)\]"
+            match = re.search(pattern, message_dict.get("raw_message", ""))
+            raw_json = html.unescape(match.group("json_data"))
             try:
                 json_message = json.loads(raw_json)
             except json.JSONDecodeError:
                 json_message = {}
-            message_segment['data'] = json_message.get('prompt','')
+            message_segment["data"] = json_message.get("prompt", "")
 
-        self.message_segment = Seg.from_dict(message_dict.get('message_segment', {}))
-        self.raw_message = message_dict.get('raw_message')
-        
+        self.message_segment = Seg.from_dict(message_dict.get("message_segment", {}))
+        self.raw_message = message_dict.get("raw_message")
+
         # 处理消息内容
         self.processed_plain_text = ""  # 初始化为空字符串
-        self.detailed_plain_text = ""   # 初始化为空字符串
-        self.is_emoji=False
-    
-    
-    def update_chat_stream(self,chat_stream:ChatStream):
-        self.chat_stream=chat_stream
-    
+        self.detailed_plain_text = ""  # 初始化为空字符串
+        self.is_emoji = False
+
+    def update_chat_stream(self, chat_stream: ChatStream):
+        self.chat_stream = chat_stream
+
     async def process(self) -> None:
         """处理消息内容，生成纯文本和详细文本
 
         这个方法必须在创建实例后显式调用，因为它包含异步操作。
         """
-        self.processed_plain_text = await self._process_message_segments(
-            self.message_segment
-        )
+        self.processed_plain_text = await self._process_message_segments(self.message_segment)
         self.detailed_plain_text = self._generate_detailed_text()
 
     async def _process_message_segments(self, segment: Seg) -> str:
@@ -157,16 +150,12 @@ class MessageRecv(Message):
             else:
                 return f"[{seg.type}:{str(seg.data)}]"
         except Exception as e:
-            logger.error(
-                f"处理消息段失败: {str(e)}, 类型: {seg.type}, 数据: {seg.data}"
-            )
+            logger.error(f"处理消息段失败: {str(e)}, 类型: {seg.type}, 数据: {seg.data}")
             return f"[处理失败的{seg.type}消息]"
 
     def _generate_detailed_text(self) -> str:
         """生成详细文本，包含时间和用户信息"""
-        time_str = time.strftime(
-            "%m-%d %H:%M:%S", time.localtime(self.message_info.time)
-        )
+        time_str = time.strftime("%m-%d %H:%M:%S", time.localtime(self.message_info.time))
         user_info = self.message_info.user_info
         name = (
             f"{user_info.user_nickname}(ta的昵称:{user_info.user_cardname},ta的id:{user_info.user_id})"
@@ -174,7 +163,7 @@ class MessageRecv(Message):
             else f"{user_info.user_nickname}(ta的id:{user_info.user_id})"
         )
         return f"[{time_str}] {name}: {self.processed_plain_text}\n"
-    
+
 
 @dataclass
 class MessageProcessBase(Message):
@@ -257,16 +246,12 @@ class MessageProcessBase(Message):
             else:
                 return f"[{seg.type}:{str(seg.data)}]"
         except Exception as e:
-            logger.error(
-                f"处理消息段失败: {str(e)}, 类型: {seg.type}, 数据: {seg.data}"
-            )
+            logger.error(f"处理消息段失败: {str(e)}, 类型: {seg.type}, 数据: {seg.data}")
             return f"[处理失败的{seg.type}消息]"
 
     def _generate_detailed_text(self) -> str:
         """生成详细文本，包含时间和用户信息"""
-        time_str = time.strftime(
-            "%m-%d %H:%M:%S", time.localtime(self.message_info.time)
-        )
+        time_str = time.strftime("%m-%d %H:%M:%S", time.localtime(self.message_info.time))
         user_info = self.message_info.user_info
         name = (
             f"{user_info.user_nickname}(ta的昵称:{user_info.user_cardname},ta的id:{user_info.user_id})"
@@ -330,10 +315,11 @@ class MessageSending(MessageProcessBase):
         self.is_head = is_head
         self.is_emoji = is_emoji
 
-    def set_reply(self, reply: Optional["MessageRecv"]) -> None:
+    def set_reply(self, reply: Optional["MessageRecv"] = None) -> None:
         """设置回复消息"""
         if reply:
             self.reply = reply
+        if self.reply:
             self.reply_to_message_id = self.reply.message_info.message_id
             self.message_segment = Seg(
                 type="seglist",
@@ -346,9 +332,7 @@ class MessageSending(MessageProcessBase):
     async def process(self) -> None:
         """处理消息内容，生成纯文本和详细文本"""
         if self.message_segment:
-            self.processed_plain_text = await self._process_message_segments(
-                self.message_segment
-            )
+            self.processed_plain_text = await self._process_message_segments(self.message_segment)
             self.detailed_plain_text = self._generate_detailed_text()
 
     @classmethod
@@ -377,10 +361,7 @@ class MessageSending(MessageProcessBase):
 
     def is_private_message(self) -> bool:
         """判断是否为私聊消息"""
-        return (
-            self.message_info.group_info is None
-            or self.message_info.group_info.group_id is None
-        )
+        return self.message_info.group_info is None or self.message_info.group_info.group_id is None
 
 
 @dataclass
