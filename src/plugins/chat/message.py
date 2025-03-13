@@ -324,7 +324,7 @@ class MessageSending(MessageProcessBase):
             self.message_segment = Seg(
                 type="seglist",
                 data=[
-                    Seg(type="reply", data=reply.message_info.message_id),
+                    Seg(type="reply", data=self.reply.message_info.message_id),
                     self.message_segment,
                 ],
             )
