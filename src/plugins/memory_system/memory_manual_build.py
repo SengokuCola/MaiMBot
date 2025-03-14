@@ -56,6 +56,10 @@ def get_closest_chat_from_db(length: int, timestamp: str):
         list: 消息记录字典列表，每个字典包含消息内容和时间信息
     """
     chat_records = []
+    db.messages.update_many(
+        {"memorized": {"$exists": False}},
+        {"$set": {"memorized": 0}}
+    )
     closest_record = db.messages.find_one({"time": {"$lte": timestamp}}, sort=[('time', -1)])
     
     if closest_record and closest_record.get('memorized', 0) < 4:            
