@@ -13,7 +13,7 @@
 要设置这两个文件才能让机器人跑起来哦：
 
 1. `.env.prod` - 这个文件告诉机器人要用哪些AI服务呢
-2. `bot_config.toml` - 这个文件教机器人怎么和你聊天喵
+2. `config/bot_config.toml` - 这个文件教机器人怎么和你聊天喵
 
 ## 🔑 密钥和域名的对应关系
 
@@ -43,13 +43,15 @@ CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1  # ChatAnyWhere的地�
 ```toml
 [model.llm_reasoning]
 name = "Pro/deepseek-ai/DeepSeek-R1"
-base_url = "SILICONFLOW_BASE_URL"  # 告诉机器人：去硅基流动游乐园玩
-key = "SILICONFLOW_KEY"            # 用硅基流动的门票进去
+provider = "SILICONFLOW"  # 告诉机器人：去硅基流动游乐园玩
+pri_in = 0  # 模型的输入价格（非必填，可以记录消耗）
+pri_out = 0  # 模型的输出价格（非必填，可以记录消耗）
 
 [model.llm_normal]
 name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"  # 还是去硅基流动游乐园
-key = "SILICONFLOW_KEY"            # 用同一张门票就可以啦
+provider = "SILICONFLOW"  # 还是去硅基流动游乐园
+pri_in = 0  # 模型的输入价格（非必填，可以记录消耗）
+pri_out = 0  # 模型的输出价格（非必填，可以记录消耗）
 ```
 
 ### 🎪 举个例子喵
@@ -59,19 +61,17 @@ key = "SILICONFLOW_KEY"            # 用同一张门票就可以啦
 ```toml
 [model.llm_reasoning]
 name = "deepseek-reasoner"       # 改成对应的模型名称，这里为DeepseekR1
-base_url = "DEEP_SEEK_BASE_URL"  # 改成去DeepSeek游乐园
-key = "DEEP_SEEK_KEY"            # 用DeepSeek的门票
+provider = "DEEP_SEEK"  # 改成去DeepSeek游乐园
 
 [model.llm_normal]
 name = "deepseek-chat"           # 改成对应的模型名称，这里为DeepseekV3
-base_url = "DEEP_SEEK_BASE_URL"  # 也去DeepSeek游乐园
-key = "DEEP_SEEK_KEY"            # 用同一张DeepSeek门票
+provider = "DEEP_SEEK"  # 也去DeepSeek游乐园
 ```
 
 ### 🎯 简单来说
 
 - `.env.prod` 文件就像是你的票夹，存放着各个游乐园的门票和地址
-- `bot_config.toml` 就是告诉机器人：用哪张票去哪个游乐园玩
+- `config/bot_config.toml` 就是告诉机器人：用哪张票去哪个游乐园玩
 - 所有模型都可以用同一个游乐园的票，也可以去不同的游乐园玩耍
 - 如果用硅基流动的服务，就保持默认配置不用改呢~
 
@@ -116,7 +116,7 @@ DATABASE_NAME=MegBot
 PLUGINS=["src2.plugins.chat"]
 ```
 
-### 第二个文件：机器人配置 (bot_config.toml)
+### 第二个文件：机器人配置 (config/bot_config.toml)
 
 这个文件就像是教机器人"如何说话"的魔法书呢！
 
@@ -161,47 +161,53 @@ enable_kuuki_read = true  # 让机器人能够"察言观色"喵
 
 [model.llm_reasoning] #推理模型R1，用来理解和思考的喵
 name = "Pro/deepseek-ai/DeepSeek-R1"  # 模型名字
-# name = "Qwen/QwQ-32B"  # 如果想用千问模型，可以把上面那行注释掉，用这个呢
-base_url = "SILICONFLOW_BASE_URL"  # 使用在.env.prod里设置的服务地址
-key = "SILICONFLOW_KEY"  # 使用在.env.prod里设置的密钥
+provider = "SILICONFLOW"  # 使用在.env.prod里设置的服务地址
+pri_in = 0  # 模型的输入价格（非必填，可以记录消耗）
+pri_out = 0  # 模型的输出价格（非必填，可以记录消耗）
 
 [model.llm_reasoning_minor] #R1蒸馏模型，是个轻量版的推理模型喵
 name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
 
 [model.llm_normal] #V3模型，用来日常聊天的喵
 name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
 
 [model.llm_normal_minor] #V2.5模型，是V3的前代版本呢
 name = "deepseek-ai/DeepSeek-V2.5"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
 
 [model.vlm] #图像识别模型，让机器人能看懂图片喵
 name = "deepseek-ai/deepseek-vl2"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
 
 [model.embedding] #嵌入模型，帮助机器人理解文本的相似度呢
 name = "BAAI/bge-m3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
 
 # 如果选择了llm方式提取主题，就用这个模型配置喵
 [topic.llm_topic]
 name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
 ```
 
 ## 💡 模型配置说明喵
 
 1. **关于模型服务**：
    - 如果你用硅基流动的服务，这些配置都不用改呢
-   - 如果用DeepSeek官方API，要把base_url和key改成你在.env.prod里设置的值喵
+   - 如果用DeepSeek官方API，要把provider改成DEEP_SEEK喵
    - 如果要用自定义模型，选择一个相似功能的模型配置来改呢
 
 2. **主要模型功能**：
