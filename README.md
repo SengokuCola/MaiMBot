@@ -152,7 +152,7 @@
 
 ### 配置说明
 
-- [🎀 新手配置指南](docs/installation_cute.md) - 通俗易懂的配置教程，适合初次使用的猫娘
+- [💕 可爱配置指南](docs/installation_cute.md) - 可可爱爱的配置教程，适合初次使用的猫娘
 - [⚙️ 标准配置指南](docs/installation_standard.md) - 简明专业的配置说明，适合有经验的用户
 
 <div align="left">
