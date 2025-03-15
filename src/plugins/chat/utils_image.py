@@ -246,7 +246,7 @@ class ImageManager:
                 return f"[表情包：{cached_description}]"
 
             # 调用AI获取描述
-            prompt = "这是一个表情包，使用中文简洁的描述一下表情包的内容和表情包所表达的情感，可以使用二次元词汇。如果有文字，请把文字描述出来。"
+            prompt = "这是一个表情包，使用中文简洁的描述一下表情包的内容和表情包所表达的情感，可以使用二次元词汇。如果有文字，请把文字描述出来。如果没有，不需要提及\"没有文字\"。"
             description, _ = await self._llm.generate_response_for_image(prompt, image_base64)
             
             # 根据配置决定是否保存图片
@@ -299,7 +299,7 @@ class ImageManager:
                 return f"[图片：{cached_description}]"
 
             # 调用AI获取描述
-            prompt = "请用中文描述这张图片的内容。如果有文字，请把文字都描述出来。并尝试猜测这个图片的含义。最多200个字，可以使用二次元词汇，如果有二次元人物，请详细描述其动作神态和发色、衣着。"
+            prompt = "请用中文描述这张图片的内容。可以使用二次元词汇。如果有二次元人物，请详细描述其动作神态和上下身衣着饰品等。如果有文字，请把文字都描述出来并尝试猜测这个图片的含义。如果没有，不需要提及\"没有文字\"或\"没有人物\"等。最多200个字。"
             description, _ = await self._llm.generate_response_for_image(prompt, image_base64)
 
             if description is None:
