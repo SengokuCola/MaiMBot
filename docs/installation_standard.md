@@ -4,8 +4,8 @@
 
 本项目需要配置两个主要文件：
 
-1. `.env.prod` - 配置API服务和系统环境
-2. `bot_config.toml` - 配置机器人行为和模型
+1. `.env.prod` - 配置API服务和系统环境，放置于程序目录
+2. `bot_config.toml` - 配置机器人行为和模型，放置于程序目录下的config文件夹
 
 ## API配置说明
 
@@ -28,24 +28,24 @@ CHAT_ANY_WHERE_BASE_URL=https://api.chatanywhere.tech/v1  # ChatAnyWhere API地�
 ### 在bot_config.toml中引用API凭证
 
 ```toml
-[model.llm_reasoning]
+[model.llm_reasoning] #回复模型1 主要回复模型
 name = "Pro/deepseek-ai/DeepSeek-R1"
-base_url = "SILICONFLOW_BASE_URL"  # 引用.env.prod中定义的地址
-key = "SILICONFLOW_KEY"            # 引用.env.prod中定义的密钥
+provider = "SILICONFLOW"#.env.prod中KEY和BASE_URL前的名称
+pri_in = 0 #模型的输入价格（非必填，可以记录消耗）
+pri_out = 0 #模型的输出价格（非必填，可以记录消耗）
 ```
 
 如需切换到其他API服务，只需修改引用：
 
 ```toml
 [model.llm_reasoning]
-name = "deepseek-reasoner"       # 改成对应的模型名称，这里为DeepseekR1
-base_url = "DEEP_SEEK_BASE_URL"  # 切换为DeepSeek服务
-key = "DEEP_SEEK_KEY"            # 使用DeepSeek密钥
+name = "deepseek-reasoner"# 改成对应的模型名称，这里为DeepseekR1
+provider = "DEEP_SEEK"#.env.prod中KEY和BASE_URL前的名称，切换为DeepSeek官方服务
 ```
 
 ## 配置文件详解
 
-### 环境配置文件 (.env.prod)
+### 环境配置文件 (config/.env.prod)
 
 ```ini
 # API配置
@@ -90,67 +90,168 @@ alias_names = ["小麦", "阿麦"]  # 机器人别名
 
 [personality]
 prompt_personality = [
-    "曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",
-    "是一个女大学生，你有黑色头发，你会刷小红书"
+"曾经是一个学习地质的女大学生，现在学习心理学和脑科学，你会刷贴吧",
+"是一个女大学生，你有黑色头发，你会刷小红书",
+"是一个女大学生，你有黑色头发，你会刷B站"
 ]
+personality_1_probability = 0.6 # 第一种人格出现概率
+personality_2_probability = 0.3 # 第二种人格出现概率
+personality_3_probability = 0.1 # 第三种人格出现概率，请确保三个概率相加等于1
 prompt_schedule = "一个曾经学习地质,现在学习心理学和脑科学的女大学生，喜欢刷qq，贴吧，知乎和小红书"
 
 [message]
 min_text_length = 2  # 最小回复长度
 max_context_size = 15  # 上下文记忆条数
 emoji_chance = 0.2  # 表情使用概率
+thinking_timeout = 120 # 麦麦思考时间
+
+response_willing_amplifier = 1 # 麦麦回复意愿放大系数，一般为1
+response_interested_rate_amplifier = 1 # 麦麦回复兴趣度放大系数,听到记忆里的内容时放大系数
+down_frequency_rate = 3.5 # 降低回复频率的群组回复意愿降低系数
 ban_words = []  # 禁用词列表
 
+ban_msgs_regex = [
+    # 需要过滤的消息（原始消息）匹配的正则表达式，匹配到的消息将被过滤（支持CQ码），若不了解正则表达式请勿修改
+    #"https?://[^\\s]+", # 匹配https链接
+    #"\\d{4}-\\d{2}-\\d{2}", # 匹配日期
+    # "\\[CQ:at,qq=\\d+\\]" # 匹配@
+]
+
 [emoji]
-auto_save = true  # 自动保存表情
-enable_check = false  # 启用表情审核
-check_prompt = "符合公序良俗"
+check_interval = 120 # 检查表情包的时间间隔
+register_interval = 10 # 注册表情包的时间间隔
+auto_save = true  # 自动偷表情包
+enable_check = false  # 是否启用表情包过滤
+check_prompt = "符合公序良俗" # 表情包过滤要求
+
+[cq_code]
+enable_pic_translate = false
+
+[response]
+model_r1_probability = 0.8 # 麦麦回答时选择主要回复模型1 模型的概率
+model_v3_probability = 0.1 # 麦麦回答时选择次要回复模型2 模型的概率
+model_r1_distill_probability = 0.1 # 麦麦回答时选择次要回复模型3 模型的概率
+max_response_length = 1024 # 麦麦回答的最大token数
+
+[memory]
+build_memory_interval = 600 # 记忆构建间隔 单位秒   间隔越低，麦麦学习越多，但是冗余信息也会增多
+memory_compress_rate = 0.1 # 记忆压缩率 控制记忆精简程度 建议保持默认,调高可以获得更多信息，但是冗余信息也会增多
+
+forget_memory_interval = 600 # 记忆遗忘间隔 单位秒   间隔越低，麦麦遗忘越频繁，记忆更精简，但更难学习
+memory_forget_time = 24 #多长时间后的记忆会被遗忘 单位小时 
+memory_forget_percentage = 0.01 # 记忆遗忘比例 控制记忆遗忘程度 越大遗忘越多 建议保持默认
+
+
+memory_ban_words = [ #不希望记忆的词
+    # "403","张三"
+]
+
+[mood]
+mood_update_interval = 1.0 # 情绪更新间隔 单位秒
+mood_decay_rate = 0.95 # 情绪衰减率
+mood_intensity_factor = 1.0 # 情绪强度因子
+
+[keywords_reaction] # 针对某个关键词作出反应
+enable = true  # 关键词反应功能的总开关
+
+[[keywords_reaction.rules]] # 如果想要新增多个关键词，直接复制本条，修改keywords和reaction即可
+enable = true # 是否启用此条（为了人类在未来AI战争能更好地识别AI（bushi），默认开启）
+keywords = ["人机", "bot", "机器", "入机", "robot", "机器人"] # 会触发反应的关键词
+reaction = "有人说你是人机或者机器人，否定这一事实，攻击或反问他。注意，只有认为你是机器人才回复，否则不要否认" # 触发之后添加的提示词
+
+[[keywords_reaction.rules]] # 就像这样复制
+enable = false # 仅作示例，不会触发
+keywords = ["测试关键词回复","test",""]
+reaction = "回答“测试成功”"
+
+[chinese_typo]
+enable = true # 是否启用中文错别字生成器
+error_rate=0.006 # 单字替换概率
+min_freq=7 # 最小字频阈值
+tone_error_rate=0.2 # 声调错误概率
+word_replace_rate=0.006 # 整词替换概率
+
+[others]
+enable_advance_output = true # 是否启用高级输出
+enable_kuuki_read = true # 是否启用读空气功能
+enable_debug_output = false # 是否启用调试输出
+enable_friend_chat = false # 是否启用好友聊天
 
 [groups]
 talk_allowed = []      # 允许对话的群号
 talk_frequency_down = []   # 降低回复频率的群号
 ban_user_id = []      # 禁止回复的用户QQ号
 
-[others]
-enable_advance_output = true  # 启用详细日志
-enable_kuuki_read = true  # 启用场景理解
 
-# 模型配置
-[model.llm_reasoning]  # 推理模型
+#V3
+#name = "deepseek-chat"
+#base_url = "DEEP_SEEK_BASE_URL"
+#key = "DEEP_SEEK_KEY"
+
+#R1
+#name = "deepseek-reasoner"
+#base_url = "DEEP_SEEK_BASE_URL"
+#key = "DEEP_SEEK_KEY"
+
+#下面的模型若使用硅基流动则不需要更改，使用ds官方则改成.env.prod自定义的宏，使用自定义模型则选择定位相似的模型自己填写
+
+#推理模型：
+
+[model.llm_reasoning] #回复模型1 主要回复模型
 name = "Pro/deepseek-ai/DeepSeek-R1"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
+pri_in = 0 #模型的输入价格（非必填，可以记录消耗）
+pri_out = 0 #模型的输出价格（非必填，可以记录消耗）
 
-[model.llm_reasoning_minor]  # 轻量推理模型
+
+[model.llm_reasoning_minor] #回复模型3 次要回复模型
 name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
-[model.llm_normal]  # 对话模型
+#非推理模型
+
+[model.llm_normal] #V3 回复模型2 次要回复模型
 name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
-[model.llm_normal_minor]  # 备用对话模型
+[model.llm_normal_minor] #V2.5
 name = "deepseek-ai/DeepSeek-V2.5"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
-[model.vlm]  # 图像识别模型
+[model.llm_emotion_judge] #主题判断 0.7/m
+name = "Qwen/Qwen2.5-14B-Instruct"
+provider = "SILICONFLOW"
+
+[model.llm_topic_judge] #主题判断：建议使用qwen2.5 7b
+name = "Pro/Qwen/Qwen2.5-7B-Instruct"
+provider = "SILICONFLOW"
+
+[model.llm_summary_by_topic] #建议使用qwen2.5 32b 及以上
+name = "Qwen/Qwen2.5-32B-Instruct"
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
+
+[model.moderation] #内容审核 未启用
+name = ""
+provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
+
+# 识图模型
+
+[model.vlm] #图像识别 0.35/m
 name = "deepseek-ai/deepseek-vl2"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
-[model.embedding]  # 文本向量模型
+
+
+#嵌入模型
+
+[model.embedding] #嵌入
 name = "BAAI/bge-m3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
+provider = "SILICONFLOW"
 
-
-[topic.llm_topic]
-name = "Pro/deepseek-ai/DeepSeek-V3"
-base_url = "SILICONFLOW_BASE_URL"
-key = "SILICONFLOW_KEY"
 ```
 
 ## 注意事项
