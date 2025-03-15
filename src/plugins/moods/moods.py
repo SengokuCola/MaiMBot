@@ -32,9 +32,9 @@ class MoodManager:
         
         # 初始化心情状态
         self.current_mood = MoodState(
-            valence=0.0,
-            arousal=0.5,
-            text="平静"
+            valence=0.3,
+            arousal=0.8,
+            text="快乐"
         )
         
         # 从配置文件获取衰减率
