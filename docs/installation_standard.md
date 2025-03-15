@@ -45,7 +45,7 @@ provider = "DEEP_SEEK"#.env.prod中KEY和BASE_URL前的名称，切换为DeepSee
 
 ## 配置文件详解
 
-### 环境配置文件 (config/.env.prod)
+### 环境配置文件 (.env.prod)
 
 ```ini
 # API配置
@@ -78,7 +78,7 @@ DATABASE_NAME=MegBot
 PLUGINS=["src2.plugins.chat"]
 ```
 
-### 机器人配置文件 (bot_config.toml)
+### 机器人配置文件 (config/bot_config.toml)
 
 ```toml
 [bot]
