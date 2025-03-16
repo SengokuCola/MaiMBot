@@ -331,7 +331,7 @@ if not exist config/bot_config.toml (
 
 )
 if not exist .env.prod (
-    copy /Y "template\.env.prod" ".env.prod"
+    copy /Y "template.env" ".env.prod"
 )
 
 start python webui.py
@@ -362,7 +362,7 @@ if "!choice!"=="5" goto learn_new_knowledge
 if "!choice!"=="6" goto open_knowledge_folder
 if "!choice!"=="7" goto menu
 
-echo 无效的输入，请输入1-6之间的数字
+echo 无效的输入，请输入1-7之间的数字
 timeout /t 2 >nul
 goto tools_menu
 
