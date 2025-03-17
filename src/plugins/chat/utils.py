@@ -17,6 +17,7 @@ from .message_base import UserInfo
 from .chat_stream import ChatStream
 from ..moods.moods import MoodManager
 from ...common.database import db
+import re
 
 driver = get_driver()
 config = driver.config
@@ -253,7 +254,7 @@ def split_into_sentences_w_remove_punctuation(text: str) -> List[str]:
     # 统一将英文逗号转换为中文逗号
     text = text.replace(',', '，')
     text = text.replace('\n', ' ')
-
+    text, mapping = protect_kaomoji(text)
     # print(f"处理前的文本: {text}")
 
     text_no_1 = ''
@@ -292,6 +293,7 @@ def split_into_sentences_w_remove_punctuation(text: str) -> List[str]:
                 current_sentence += ' ' + part
         new_sentences.append(current_sentence.strip())
     sentences = [s for s in new_sentences if s]  # 移除空字符串
+    sentences = recover_kaomoji(sentences, mapping)
 
     # print(f"分割后的句子: {sentences}")
     sentences_done = []
@@ -303,7 +305,6 @@ def split_into_sentences_w_remove_punctuation(text: str) -> List[str]:
             sentence = sentence.replace('，', ' ').replace(',', ' ')
         sentences_done.append(sentence)
 
-    logger.info(f"处理后的句子: {sentences_done}")
     return sentences_done
 
 
@@ -446,3 +447,59 @@ def truncate_message(message: str, max_length=20) -> str:
     if len(message) > max_length:
         return message[:max_length] + "..."
     return message
+
+
+def protect_kaomoji(sentence):
+    """
+    识别并保护句子中的颜文字（含括号与无括号），将其替换为占位符，
+    并返回替换后的句子和占位符到颜文字的映射表。
+
+    Args:
+        sentence (str): 输入的原始句子
+
+    Returns:
+        tuple: (处理后的句子, {占位符: 颜文字})
+    """
+    kaomoji_pattern = re.compile(
+        r'('
+        r'[\(\[（【]'             # 左括号
+        r'[^()\[\]（）【】]*?'   # 非括号字符（惰性匹配）
+        r'[^\u4e00-\u9fa5a-zA-Z0-9\s]'  # 非中文、非英文、非数字、非空格字符（必须包含至少一个）
+        r'[^()\[\]（）【】]*?'   # 非括号字符（惰性匹配）
+        r'[\)\]）】]'             # 右括号
+        r')'
+        r'|'
+        r'('
+        r'[▼▽・ᴥω･﹏^><≧≦￣｀´∀ヮДд︿﹀へ｡ﾟ╥╯╰︶︹•⁄]{2,15}'
+        r')'
+    )
+
+    kaomoji_matches = kaomoji_pattern.findall(sentence)
+    placeholder_to_kaomoji = {}
+
+    for idx, match in enumerate(kaomoji_matches):
+        kaomoji = match[0] if match[0] else match[1]
+        placeholder = f'__KAOMOJI_{idx}__'
+        sentence = sentence.replace(kaomoji, placeholder, 1)
+        placeholder_to_kaomoji[placeholder] = kaomoji
+
+    return sentence, placeholder_to_kaomoji
+
+
+def recover_kaomoji(sentences, placeholder_to_kaomoji):
+    """
+    根据映射表恢复句子中的颜文字。
+
+    Args:
+        sentences (list): 含有占位符的句子列表
+        placeholder_to_kaomoji (dict): 占位符到颜文字的映射表
+
+    Returns:
+        list: 恢复颜文字后的句子列表
+    """
+    recovered_sentences = []
+    for sentence in sentences:
+        for placeholder, kaomoji in placeholder_to_kaomoji.items():
+            sentence = sentence.replace(placeholder, kaomoji)
+        recovered_sentences.append(sentence)
+    return recovered_sentences
