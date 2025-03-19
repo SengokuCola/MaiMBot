@@ -158,8 +158,8 @@ class ChatBot:
         is_mentioned = is_mentioned_bot_in_message(message)
     
         if is_mentioned:
-            #如果被@等待下文10秒
-            await asyncio.sleep(10)
+            #如果被@等待下文5秒
+            await asyncio.sleep(5)
             logger.info(f"被@，等待下文")
             
         reply_probability = await willing_manager.change_reply_willing_received(
