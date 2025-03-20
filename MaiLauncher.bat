@@ -276,6 +276,18 @@ if exist "%_root%\config\no_venv" (
 if defined VIRTUAL_ENV (
     goto menu
 )
+if exist "%_root%\config\conda_env" (
+    set /p CONDA_ENV=<"%_root%\config\conda_env"
+    call conda activate !CONDA_ENV! || (
+    echo 激活失败，可能原因：
+    echo 1. 环境不存在
+    echo 2. conda配置异常
+    pause
+    goto conda_menu
+	)
+	echo 成功激活conda环境：!CONDA_ENV!
+	goto menu
+)
 
 echo =====================================
 echo 虚拟环境检测警告：
@@ -285,7 +297,7 @@ echo 未检测到激活的虚拟环境！
 :env_interaction
 echo =====================================
 echo 请选择操作：
-echo 1 - 创建并激活Venv虚拟环境
+echo 1 - 创建并激活Venv虚拟环境（推荐）
 echo 2 - 创建/激活Conda虚拟环境
 echo 3 - 临时跳过本次检查
 echo 4 - 永久跳过虚拟环境检查
@@ -390,6 +402,7 @@ call conda activate !CONDA_ENV! || (
     goto conda_menu
 )
 echo 成功激活conda环境：!CONDA_ENV!
+echo !CONDA_ENV! > "%_root%\config\conda_env"
 echo 要安装依赖吗？
 set /p install_confirm="继续？(Y/N): "
 if /i "!install_confirm!"=="Y" (
@@ -430,7 +443,7 @@ if not exist config/bot_config.toml (
 
 )
 if not exist .env.prod (
-    copy /Y "template\.env.prod" ".env.prod"
+    copy /Y "template.env" ".env.prod"
 )
 
 start python webui.py
