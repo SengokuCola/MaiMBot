@@ -6,6 +6,7 @@ from ...common.database import db
 from .message_base import UserInfo
 from .chat_stream import ChatStream
 import math
+from bson.decimal128 import Decimal128  # 假设使用的是pymongo的Decimal128
 
 logger = get_module_logger("rel_manager")
 
@@ -113,6 +114,11 @@ class RelationshipManager:
         if relationship:
             for k, value in kwargs.items():
                 if k == "relationship_value":
+                    if isinstance(relationship.relationship_value, Decimal128):
+                        # 将Decimal128类型转换为float
+                        relationship.relationship_value = float(relationship.relationship_value.to_decimal())
+                    else:
+                        relationship.relationship_value = float(relationship.relationship_value)
                     relationship.relationship_value += value
             await self.storage_relationship(relationship)
             relationship.saved = True
@@ -196,7 +202,13 @@ class RelationshipManager:
         user_id = relationship.user_id
         platform = relationship.platform
         nickname = relationship.nickname
-        relationship_value = relationship.relationship_value
+        # 确保relationship.relationship_value为可转换为float的类型
+        try:
+            relationship_value = float(relationship.relationship_value)
+        except TypeError:
+            # 如果无法转换，将其设为默认值0
+            relationship_value = 0
+            logger.error(f"无法将relationship_value {relationship.relationship_value} 转换为float类型，尝试设置为默认值0(有可能保留原有值)。")
         gender = relationship.gender
         age = relationship.age
         saved = relationship.saved
