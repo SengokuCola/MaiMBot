@@ -59,7 +59,7 @@ class WillingManager:
             print(f"被重复提及, 当前意愿: {current_willing}")
         
         if is_emoji:
-            current_willing *= 0.1
+            current_willing *= 0
             print(f"表情包, 当前意愿: {current_willing}")
         
         print(f"放大系数_interested_rate: {global_config.response_interested_rate_amplifier}")
